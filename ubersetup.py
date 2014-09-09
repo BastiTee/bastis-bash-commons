@@ -48,6 +48,12 @@ def smkdir (directory):
     except OSError:
         pass
 
+def check_for_pip ():
+    for line in runcommand(PIP_LIST, suppress_output=True):
+        if 'no module named pip' in line.lower():
+            return False
+    return True
+		
 def test_if_package_installed (package):
     for line in runcommand(PIP_LIST, suppress_output=True):
         if package.lower() in line.lower():
@@ -99,7 +105,7 @@ def ubersetup_system ():
     smkdir(tmp_dir)
     
     print '=== Installiung pip using python'
-    if not test_if_package_installed('pip'):
+    if not check_for_pip():
         pip_install_script = path.join(tmp_dir, 'get-pip.py')
         urllib.urlretrieve ('https://bootstrap.pypa.io/get-pip.py', pip_install_script)
         runcommand (pip_install_script, tmp_dir)
