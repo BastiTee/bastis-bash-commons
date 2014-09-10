@@ -15,13 +15,15 @@ this_directory = path.dirname(path.realpath(__file__))
 """Path where this script is located"""
 tmp_dir = path.join(this_directory, 'temp')
 """Install temporary directory"""
-PIP_INSTALL_SINGLE = 'pip install {0}'
+PIP_COMM = 'python -m pip '
+"""PIP command"""
+PIP_INSTALL_SINGLE = PIP_COMM+'install {0}'
 """PIP-command to install a single package"""
-PIP_INSTALL_FILE = 'pip install -r {0}'
+PIP_INSTALL_FILE = PIP_COMM+' install -r {0}'
 """PIP-command to install packages from a file description""" 
-PIP_LIST = 'pip list'
+PIP_LIST = PIP_COMM+' list'
 """PIP-command to list all installed packages"""
-PIP_UNINSTALL = 'pip uninstall -y {0}'
+PIP_UNINSTALL = PIP_COMM+' uninstall -y {0}'
 """PIP-command to silently delete a package"""
 
 def runcommand (command, workingdir=this_directory, suppress_output=False):
@@ -125,7 +127,7 @@ def ubersetup_system ():
             z.extractall(bptbx_dir)
           
         extracted_dir = path.join(bptbx_dir, 'bastis-python-toolbox-master')
-        runcommand ('{0} install'.format(path.join(extracted_dir, 'setup.py')), extracted_dir)
+        runcommand ('python {0} install'.format(path.join(extracted_dir, 'setup.py')), extracted_dir)
     else:
         print 'Package bptbx already installed.'
         
