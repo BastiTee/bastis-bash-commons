@@ -90,7 +90,7 @@ def install_package (package, ost, osb, pyv, ptype, src):
     trg_file = path.join(tmp_dir, path.basename(src))
     urllib.urlretrieve(src, trg_file)
     if ptype == 'wheel':
-        runcommand('wheel install {0}'.format(trg_file))
+        runcommand('python -m wheel install {0}'.format(trg_file))
         return True
     elif ptype == 'install':
         runcommand('{0}'.format(trg_file))
