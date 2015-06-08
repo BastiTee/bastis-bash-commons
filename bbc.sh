@@ -2,7 +2,6 @@
 
 ################################################################################
 # BASTI'S BASH COMMONS
-#
 # Best way to include is to add the script to your path and include with
 # if [ ! -v $( command -v "bbc.sh" ) ]; then source bbc.sh; else exit; fi
 #
