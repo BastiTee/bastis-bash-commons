@@ -10,6 +10,7 @@
 function bbc_exe () {
 	# Tests if a command does exist and, if yes, runs it. This comes in handy
 	# if you are unsure whether a tool exists. 
+	# $1 = command to be tested 
 	
 	if [ ! -v $( command -v $1 ) ]
 	then
@@ -19,6 +20,7 @@ function bbc_exe () {
 
 function bbc_print_xml () {
 	# Pretty-prints an XML string to the command line. 
+	# $1 = XML file 
 	
 	bbc_exe tput setaf 2
 	echo
@@ -31,22 +33,50 @@ function bbc_run_psql () {
 	# Runs a given postgresql command through the psql command line. 
 	# ATTENTION: This method assumes that $PG_PASS $PG_USSER and $PG_DB 
 	# are set somewhere in your script. 
+	# $1 = postgresql Query with escaped quotation marks 
 	
 	export PGPASSWORD=$PG_PASS
 	psql -h localhost -t -F " " -A -c "$1" $PG_DB $PG_USER
 }
 
 function bbc_get_datetime () {
-	# Returns a filesave datetime  timestamp to be used in files 
+	# Returns a filesave datetime  timestamp to be used in files .
 	
 	date "+%Y%m%d-%H%M%S"
 }
 
 function bbc_whereami () {
-	# Returns the location of the current script
+	# Returns the location of the current script.
 	
 	location=$( readlink -f $( dirname $0 ))
 	echo ${location}/$( basename $0 )
+}
+
+function bbc_get_filename () {
+	# Returns filename without path and suffix from given filepath.
+	# $1 = Path to file
+	
+	filename=$(basename "$1")
+	echo ${filename%.*}
+}
+
+function bbc_get_filesuffix () {
+	# Returns fie suffix without path and filename from given filepath.
+	# $1 = Path to file
+	
+	filename=$(basename "$1")
+	echo ${filename##*.}
+}
+
+function bbc_split_on_pattern () {
+	# Splits a file on a given regex pattern into multiple files.
+	# $1 = input file
+	# $2 = regular expression to split files on 
+	
+	base=$( bbc_get_filename $1 )
+	suff=$( bbc_get_filesuffix $1 )
+	awk -v pat="$2" -v base=$base -v suff=$suff '$0 ~ pat { i++ }{ \
+	print > base"."sprintf("%05d", i)"."suff }' ${1}
 }
 
 ################################################################################
@@ -58,13 +88,13 @@ show_help () {
 	echo -e "\t-l \t\tList all non-internal methods"
 	echo -e "\t-e <message>\tExample argument. Only prints out your message."
 	echo
-	exit 1
 }
 
 while getopts "he:l" opt; do
     case "$opt" in
     h)
         show_help
+		exit 1
         ;;
 	e)  echo $OPTARG
 		exit 0
@@ -79,6 +109,7 @@ while getopts "he:l" opt; do
 		;;
 	*)
 		show_help
+		exit 1
 		;;
 	esac
 done
