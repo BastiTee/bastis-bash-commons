@@ -10,7 +10,7 @@
 function bbc_exe () {
 	# Tests if a command does exist and, if yes, runs it. This comes in handy
 	# if you are unsure whether a tool exists. 
-	# $1 = command to be tested 
+	# $1 = Command to be executed 
 	
 	if [ ! -v $( command -v $1 ) ]
 	then
@@ -33,14 +33,14 @@ function bbc_run_psql () {
 	# Runs a given postgresql command through the psql command line. 
 	# ATTENTION: This method assumes that $PG_PASS $PG_USSER and $PG_DB 
 	# are set somewhere in your script. 
-	# $1 = postgresql Query with escaped quotation marks 
+	# $1 = PostgreSQL Query with escaped quotation marks 
 	
 	export PGPASSWORD=$PG_PASS
 	psql -h localhost -t -F " " -A -c "$1" $PG_DB $PG_USER
 }
 
 function bbc_get_datetime () {
-	# Returns a filesave datetime  timestamp to be used in files .
+	# Returns a file-safe datetime timestamp to be used in files.
 	
 	date "+%Y%m%d-%H%M%S"
 }
@@ -70,8 +70,8 @@ function bbc_get_filesuffix () {
 
 function bbc_split_on_pattern () {
 	# Splits a file on a given regex pattern into multiple files.
-	# $1 = input file
-	# $2 = regular expression to split files on 
+	# $1 = Input file
+	# $2 = Regular expression to split file at 
 	
 	base=$( bbc_get_filename $1 )
 	suff=$( bbc_get_filesuffix $1 )
@@ -100,10 +100,11 @@ while getopts "he:l" opt; do
 		exit 0
         ;;
 	l)	clear
-		cat $( bbc_whereami ) | egrep "^function" -A3 | grep -e "^function" \
+		cat $( bbc_whereami ) | egrep "^function" -A5 | grep -e "^function" \
 		-e "^[[:space:]]*#" | sed -r -e "s/#[ ]*//g" -e "s/ \(\) \{/\n/g" \
-		-e "s/^(function.*)/\n$(bbc_exe "tput setaf 3")\1$(bbc_exe \
-		"tput sgr 0")/g" 
+		-e "s/^function(.*)/\n$(bbc_exe "tput setaf 3")\1$(bbc_exe \
+		"tput sgr 0")/g" -e "s/^([[:space:]]*\\\$[0-9]{1,}.*)/$(bbc_exe \
+		"tput setaf 2")\1$(bbc_exe "tput sgr 0")/g"
 		echo
 		exit 0
 		;;

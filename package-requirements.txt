@@ -1,6 +1,0 @@
-epydoc>=3.0.1
-pep8>=1.5.7
-Pygments>=1.6
-requests>=2.3.0
-Sphinx>=1.2.3
-fabric>=1.9.0
