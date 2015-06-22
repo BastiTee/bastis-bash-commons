@@ -7,6 +7,18 @@
 #
 ################################################################################
 
+function bbc_yesno () {
+	# Asks the user a yes/no question and returns 1 if 'yes' and 0 if 'no'
+	# $1 = The question	read -p "$1 (y/n)" -n 1 -r
+	echo "" # (optional) move to a new line
+	if [[ $REPLY =~ ^[Yy]$ ]]
+	then
+		echo 1
+	else
+		echo 0
+	fi	
+}
+
 function bbc_exe () {
 	# Tests if a command does exist and, if yes, runs it. This comes in handy
 	# if you are unsure whether a tool exists. 
@@ -80,37 +92,32 @@ function bbc_split_on_pattern () {
 }
 
 ################################################################################
-# Internal script management 
+# COMMAND LINE PARSING RECIPES
 ################################################################################
 
-show_help () {
+function show_help () {
+	# Prints out information to the script user
+	# $1 = Exit code 
+	
 	echo -e "\nUsage: `basename $0` [-e <message>]\n"
-	echo -e "\t-l \t\tList all non-internal methods"
-	echo -e "\t-e <message>\tExample argument. Only prints out your message."
+	echo -e "\t-e <message>\tExample argument."
 	echo
+	exit $1 
 }
 
-while getopts "he:l" opt; do
-    case "$opt" in
-    h)
-        show_help
-		exit 1
-        ;;
-	e)  echo $OPTARG
-		exit 0
-        ;;
-	l)	clear
-		cat $( bbc_whereami ) | egrep "^function" -A5 | grep -e "^function" \
-		-e "^[[:space:]]*#" | sed -r -e "s/#[ ]*//g" -e "s/ \(\) \{/\n/g" \
-		-e "s/^function(.*)/\n$(bbc_exe "tput setaf 3")\1$(bbc_exe \
-		"tput sgr 0")/g" -e "s/^([[:space:]]*\\\$[0-9]{1,}.*)/$(bbc_exe \
-		"tput setaf 2")\1$(bbc_exe "tput sgr 0")/g"
-		echo
-		exit 0
-		;;
-	*)
-		show_help
-		exit 1
-		;;
-	esac
-done
+function parse_command_line ()   {
+	# Parses the command line for the given options and reacts appropriately.
+	
+	while getopts "he:l" opt; do
+		case "$opt" in
+		h)
+			show_help 0
+			;;
+		e)  echo $OPTARG
+			;;
+		*)
+			show_help 1
+			;;
+		esac
+	done
+}
