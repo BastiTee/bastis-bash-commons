@@ -25,11 +25,21 @@ function bbc_log () {
 	bbc_exe tput sgr 0
 }
 
+function bbc_askpass () {
+	# Asks the user for a password
+	# $1 = Optional alternate question, e.g. "Enter your google.com password"
+
+	question="Enter password"
+	if [ $# -ge 1 ]; then question=$1; fi
+	read -s -p "$question: " bbc_password
+	echo ""
+}
 
 function bbc_yesno () {
 	# Asks the user a yes/no question and returns 1 if 'yes' and 0 if 'no'
-	# $1 = The question	read -p "$1 (y/n)" -n 1 -r
+	# $1 = The question to ask
 
+	read -p "$1 (y/n)" -n 1 -r
 	echo "" # (optional) move to a new line
 	if [[ $REPLY =~ ^[Yy]$ ]]
 	then
@@ -37,6 +47,18 @@ function bbc_yesno () {
 	else
 		echo 0
 	fi
+}
+
+function bbc_urlescape () {
+	# URL-escapes the given string
+	# $1 = The string to be escaped.
+
+	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" -e "s/\\$/%24/g" \
+	-e "s/&/%26/g" -e "s/'/%27/g" -e "s/(/%28/g" -e "s/)/%29/g" \
+	-e "s/*/%2A/g" -e "s/+/%2B/g" -e "s/,/%2C/g" -e "s/\//%2F/g" -e "s/:/%3A/g" \
+	-e "s/;/%3B/g" -e "s/=/%3D/g" -e "s/?/%3F/g" -e "s/@/%40/g" -e "s/\[/%5B/g" \
+	-e "s/\]/%5D/g"
+
 }
 
 function bbc_exe () {
