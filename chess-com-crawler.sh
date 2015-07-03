@@ -6,9 +6,11 @@ function show_help () {
 	# Prints out information to the script user
 	# $1 = Exit code
   if [ $# -ge 2 ]; then echo $2; fi
-	echo -e "\nUsage: `basename $0` -u <username> -o <targetfolder>\n"
-	echo -e "\t-u <username>\tchess.com username"
-  echo -e "\t-o <targetfolder>\tTarget folder"
+	echo -e "\nUsage: `basename $0` -u <your_username> -o <target_folder> \
+[-t <target_user>]\n"
+	echo -e "\t-u <your_username>\tYour chess.com username."
+  echo -e "\t-o <target_folder>\tTarget folder."
+  echo -e "\t-t <target_user>\tchess.com username to be crawled."
 	echo
 	exit $1
 }
@@ -20,25 +22,33 @@ while getopts "hu:o:" opt; do
 		;;
 	u) username=$OPTARG
 		;;
-  o) targetfolder=$OPTARG
+  o) target_folder=$OPTARG
 		;;
+  o) target_user=$OPTARG
+    ;;
 	*)
 		show_help 1
 		;;
 	esac
 done
 
-if [ -v $targetfolder ]; then show_help 1 "Target folder not set."; fi
+if [ -v $target_folder ]; then show_help 1 "Target folder not set."; fi
 if [ -v $username ]; then show_help 1 "Username not set."; fi
-bbc_askpass "Enter chess.com password"
+bbc_askpass "enter chess.com password"
 bbc_password=$( bbc_urlescape $bbc_password )
 if [ -v $bbc_password ]; then show_help 1 "Password not set."; fi
 
-cookiejar=${targetfolder}/cookies.txt
-archivefile=${targetfolder}/archive.html
-idfile=${targetfolder}/game_ids.txt
+if [ -v $target_user ]; then target_user=$username; fi
 
-mkdir -p $targetfolder
+target_folder=${target_folder}/${target_user}
+if [ -e ${target_folder} ]
+then
+  mv $target_folder ${target_folder}.$( bbc_get_datetime )
+fi
+mkdir -p ${target_folder}
+cookiejar=${target_folder}/cookies.txt
+archivefile=${target_folder}/archive.html
+idfile=${target_folder}/game_ids.txt
 
 response_code=$( curl \
 --request POST \
@@ -52,7 +62,7 @@ https://www.chess.com/login )
 
 if [ $response_code != 302 ]; then echo "Login seemed to have failed."; exit; fi
 sessid=$( cat ${cookiejar} | tail -n1 | awk '{print $7}' )
-bbc_log "SESSION ID : '$sessid'"
+bbc_log "session-id : '$sessid'"
 
 page_pointer=1
 while true
@@ -61,10 +71,10 @@ do
   --request GET \
   --insecure \
   --header "Cookie: PHPSESSID=${sessid}; sm_dapi_session=1;" \
-  --write-out "ARCHIVE-REQUEST-RESPONSE-CODE: %{http_code}\n" \
+  --write-out "archive-request-response-code: %{http_code}\n" \
   --output ${archivefile} \
   --stderr /dev/null \
-  "http://www.chess.com/home/game_archive?sortby=&show=live_blitz&member=Pitti_Platsch&page=${page_pointer}"
+  "http://www.chess.com/home/game_archive?sortby=&show=live_blitz&member=${target_user}&page=${page_pointer}"
 
   cat ${archivefile} | grep "livechess/game?id=" |\
   sed -r -e "s/.*livechess\/game\?id=([^\"]+)\".*/\1/g" >> $idfile
@@ -76,6 +86,7 @@ do
   # find out last page of pagination
   last_page=$( cat ${archivefile} | grep "class=\"pagination\"" | tr "<" "\n" |\
   grep "page=" | sed -r -e "s/.*page=([0-9]+)\".*/\1/g" | sort -nu | tail -n1 )
+  if [ -v $last_page ]; then break; fi # no paging means only one page
   # point to next page
   page_pointer=$(( $page_pointer + 1 ))
 
@@ -84,24 +95,27 @@ done
 no_games=$( cat $idfile | sort -u | wc -l )
 bbc_log "found $no_games games in archive"
 
-# cat $idfile | xargs -P1 -I {} curl \
-#   --verbose \
-#   --request GET \
-#   --header "Cookie: sm_dapi_session=1; PHPSESSID=${sessid}" \
-#   --header "User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36" \
-#   --output ${target_folder}/{}.pgn "http://www.chess.com/echess/download_pgn?lid={}"
+function download_pgn () {
+  stderr_tmp=${target_folder}/games/${1}_dl.txt
+  curl \
+    --verbose \
+    --request GET \
+    --header "Cookie: sm_dapi_session=1; PHPSESSID=${sessid}" \
+    --stderr ${stderr_tmp} \
+    --output ${target_folder}/games/${1}.pgn \
+    "http://www.chess.com/echess/download_pgn?lid=${1}"
+  if [ -s ${stderr_tmp} ]
+  then
+    true_filename=$( cat ${stderr_tmp} |\
+    grep "Content-Disposition: attachment;" | tail -n1 |\
+    sed -r -e "s/.*filename=\"([^\"]+)\".*/\1/g")
+    mv ${target_folder}/games/${1}.pgn ${target_folder}/games/${true_filename}
+    mv ${stderr_tmp} ${target_folder}/games/${true_filename}.txt
+  fi
+  sleep 0.1
+}
 
-# form_state=$( cat $archivefile | grep "FormState" | sed -r -e "s/.*value=\"([^\"]+)\".*/\1/g" )
-# echo $form_state
+mkdir -p ${target_folder}/games
+for lid in $( cat $idfile ); do download_pgn $lid; done
 
-# game_one=$( head -n1 $idfile)
-# echo "game1: $game_one"
-# curl \
-# --verbose \
-# --request POST \
-# --header "Cookie: sm_dapi_session=1; PHPSESSID=${sessid}" \
-# --header "User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36" \
-# --write-out "PGN-REQUEST-RESPONSE-CODE: %{http_code}\n" \
-# --output test.html \
-# --data "gamearchivecheckbox${game_one}=on&Qform__FormControl=c21&Qform__FormEvent=QClickEvent&Qform__FormParameter=&Qform__FormCallType=Server&Qform__FormUpdates=&Qform__FormState=${form_state}&Qform__FormId=GameArchiveForm" \
-# "http://www.chess.com/home/game_archive?sortby=&show=live_blitz&member=Pitti_Platsch"
+# fin

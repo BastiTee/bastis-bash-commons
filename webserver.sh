@@ -1,5 +1,7 @@
 #!/bin/bash
 # A simple webserver framework written in Bash
+# Web resources:
+# http://www.redspin.com/blog/labs/2009/07/01/handling-html-in-the-shell/
 
 # Include Basti's Bash Commons
 if [ ! -v $( command -v "bbc.sh" ) ]; then source bbc.sh; else exit; fi
