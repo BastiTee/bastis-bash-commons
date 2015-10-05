@@ -1,0 +1,223 @@
+#!/bin/bash
+###############################################################################
+# flipbook-generator 
+#
+# Providing an image folder with images having the same basic dimensions (i.e., 
+# regardless of the orientation so that 500x300 and 300x500 are considered to
+# have the same dimensions), this script will create a flipbook that suits 
+# unordered and unfiltered image sets that you've just dumped from your camera.
+# Exploiting burst image sets and redundant pictures of the same scene, this 
+# will create a nice movement effect like in a classic flipbook.  
+###############################################################################
+
+# Binary paths TODO: Read by defaults and check existence 
+BIN_IDENTIFY=identify.exe
+BIN_CONVERT=convert.exe
+BIN_COMPOSITE=composite.exe 
+BIN_FFMPEG=ffmpeg.exe
+NECESSARY_TOOLS="$BIN_IDENTIFY $BIN_CONVERT $BIN_COMPOSITE $BIN_FFMPEG"
+
+# I/O defaults 
+INPUT_FOLDER=
+INPUT_PATTERN="*.JPG"
+OUTPUT_FILENAME=
+TEMPF="slideshow_tmp" #does not work with abs paths 
+IMG_PROPS="${TEMPF}/image_properties.txt"
+STILL_FRAMES_PER_IMAGE=5
+BLEND_FRAMES_PER_IMAGE=3
+VIDEO_FPS=25
+TARGET_RESIZE=0.5
+OVERWRITE=0
+
+function show_help () {
+	# Prints out information to the script user
+	# $1 = Exit code
+
+	echo -e "\nUsage: `basename $0` -i <input-folder> -o <output-filename> [-p <file-pattern>] [-f]\n"
+	echo -e "\t-i <input-folder>\tInput  folder."
+	echo -e "\t-o <output-filename>\tOutput filename without suffix, e.g., my-flipbook"
+	echo -e "\t-p <file-pattern>\tInput file pattern (default: \"${INPUT_PATTERN}\")"
+	echo -e "\t-f\t\t\tForce overwrite of existing temporary files"
+	echo
+	exit $1
+}
+
+function pad_number () {
+	printf "%08d" $1
+}
+
+function generate_rotated_image () {
+	$BIN_CONVERT $2 -strip -rotate $1 -gravity center -crop ${crop_dimensions}+0+0 -brightness-contrast -30x0 -blur 8x16  -resize ${upscale_dimensions} fcrop.jpg
+	$BIN_CONVERT $2 -strip -rotate $1 frota.jpg
+	$BIN_COMPOSITE frota.jpg fcrop.jpg -gravity center fcomp.jpg 
+	$BIN_CONVERT fcomp.jpg -resize ${target_dimensions} $3
+	rm frota.jpg fcrop.jpg fcomp.jpg
+}
+
+# Check environment 
+tools_available=1
+for tool in $NECESSARY_TOOLS
+do
+	command_out=$( command -v "$tool" )
+	if [ -v "$command_out" ]
+	then
+		echo "Necessary command-line tool '$tool' not found."
+		tools_available=0
+	fi
+done 
+if [ $tools_available == 0 ]; then show_help 1; fi  
+
+# Read command line 
+while getopts "hi:p:fo:" opt; do
+	case "$opt" in
+	h)
+		show_help 0
+		;;
+	i)  INPUT_FOLDER=$OPTARG
+		;;
+	p)  INPUT_PATTERN=$OPTARG
+		;;
+	o)  OUTPUT_FILENAME=$OPTARG
+		;;
+	f)  OVERWRITE=1
+		;;
+	*)
+		show_help 1
+		;;
+	esac
+done
+
+# Check cmd properties 
+if [ -v $INPUT_FOLDER ]; then echo "Input folder not set."; show_help 1; fi 
+if [ ! -e $INPUT_FOLDER ]; then echo "Input folder does not exist."; show_help 1; fi
+if [ -v $OUTPUT_FILENAME ]; then echo "Output filename not set."; show_help 1; fi  
+
+# prepare environment 
+cd $INPUT_FOLDER 
+mkdir -p $TEMPF
+
+# get image properties 
+echo "reading source image properties..."
+if [ ! -e ${IMG_PROPS} ] || [ $OVERWRITE == 1 ]
+then
+	$BIN_IDENTIFY -format '%f %w %h %x %y %[EXIF:Orientation]\n' $INPUT_PATTERN > ${IMG_PROPS}
+fi
+
+echo "checking source image properties..."
+
+# make sure that we only have one type of image dimension 
+no_widths=$( cat ${IMG_PROPS}  | awk '{print $2}' | sort -u | wc -l )
+no_heights=$( cat ${IMG_PROPS}  | awk '{print $3}' | sort -u | wc -l )
+if [ $no_widths != 1 ] || [ $no_widths != 1 ]
+then
+	echo "Script only works with images having the same dimensions. Please refer to ${IMG_PROPS} to find outliers."
+	show_help 1
+fi 
+
+# calculate some dimension values
+img_width=$( cat ${IMG_PROPS}  | awk '{print $2}' | sort -n | head -n1 )
+img_height=$( cat ${IMG_PROPS}  | awk '{print $3}' | sort -n | head -n1 )
+aspect=$( echo "scale=2; $img_width / $img_height" | bc )
+upscale_width=$( echo $( scale=2; echo "$img_width * $aspect" | bc ) | awk '{printf("%d\n",$1 + 0.5)}' )
+crop_width=$( echo $( scale=2; echo "$img_height / $aspect" | bc ) | awk '{printf("%d\n",$1 + 0.5)}' )
+resize_width=$( echo $( scale=2; echo "$img_width * $TARGET_RESIZE" | bc ) | awk '{printf("%d\n",$1 + 0.5)}' )
+resize_height=$( echo $( scale=2; echo "$img_height * $TARGET_RESIZE" | bc ) | awk '{printf("%d\n",$1 + 0.5)}' )
+upscale_dimensions="${upscale_width}x${img_width}"
+target_dimensions="${resize_width}x${resize_height}"
+crop_dimensions="${img_height}x${crop_width}"
+
+# print out dimension calculations 
+echo "input image properties"
+echo -e "\t image width:        $img_width"
+echo -e "\t image height:       $img_height"
+echo -e "\t aspect factor:      $aspect"
+echo -e "\t upscale dimensions: $upscale_dimensions"
+echo -e "\t crop dimensions:    $crop_dimensions"
+echo -e "\t target resize fac.: $TARGET_RESIZE"
+echo -e "\t target dimensions:  $target_dimensions"
+
+echo "generating flipbook pages ..."
+# - make all images landscape include image expansion if necessary 
+# - resize all images to same size 
+# - use a fixed naming convention proper for ffmpeg 
+index=0
+first_image=1
+previous_target=
+total_files=$( ls $INPUT_PATTERN | wc -l )
+for file in $INPUT_PATTERN
+do
+	echo "-- INPUT IMAGE $index --"
+
+	# get some image properties 
+	bnf=$( basename $file )
+	image_data=$( cat $IMG_PROPS | grep $bnf )
+	orientation=$( echo $image_data | awk '{print $6}' ) # http://www.imagemagick.org/script/escape.php
+	
+	# get index for src still image 
+	if [ $first_image == 1 ]
+	then
+		src_still_no=1
+	else 
+		src_still_no=$(( $index * ( $STILL_FRAMES_PER_IMAGE + $BLEND_FRAMES_PER_IMAGE ) + 1 ))
+	fi
+	
+	target="${TEMPF}/img-$( pad_number $src_still_no).jpg"
+	
+	# generate the source still image for the slide show
+	echo "$target - still image source"
+	copy_src=$target
+	if [ ! -e $target ] || [ $OVERWRITE == 1 ]
+	then 
+		if [ $orientation == 1 ] # image already correctly in landscape 
+		then
+			$BIN_CONVERT $file -strip -resize ${target_dimensions} $target
+		elif [ $orientation == 6 ]
+		then
+			generate_rotated_image 90 $file $target
+		elif [ $orientation == 8 ]
+		then
+			generate_rotated_image -90 $file $target
+		else
+			echo "Unsupported rotation $orientation"; exit 1
+		fi
+	fi
+	
+	# generate the copied still images for the slide show 
+	for i in $( seq 1 $(( $STILL_FRAMES_PER_IMAGE - 1 )) )
+	do
+		target="${TEMPF}/img-$( pad_number $(( $src_still_no + $i ))).jpg"
+		echo "$target - still image copy from $copy_src"
+		if [ ! -e $target ] || [ $OVERWRITE == 1 ]
+		then 
+			cp $copy_src $target 
+		fi
+	done 
+	
+	# generate blended images if not last image 
+	if [ $first_image != 1 ]
+	then
+		blendstep=$(( 100 / ( $BLEND_FRAMES_PER_IMAGE + 1 ) ))		
+		for i in $( seq 0 $(( $BLEND_FRAMES_PER_IMAGE - 1 )) )
+		do
+			target="${TEMPF}/img-$( pad_number $(( $src_still_no - $BLEND_FRAMES_PER_IMAGE + $i ))).jpg"
+			if [ ! -e $target ] || [ $OVERWRITE == 1 ]
+			then 
+				blending=$(( ( $i + 1 ) * $blendstep )) 
+				echo "$target - blend image $i with blending $blending pct. using $( basename $previous_target ) and $( basename $copy_src )"
+				$BIN_COMPOSITE -blend $blending $copy_src $previous_target $target
+			fi
+		done 
+	fi
+	
+	previous_target=$copy_src	
+	if [ $first_image == 1 ]; then first_image=0; fi 
+	index=$(( $index + 1))
+done
+
+echo "merging images to video using ffmpeg..." 
+cd $TEMPF
+ffmpeg_cmd="$BIN_FFMPEG -y -i img-%08d.jpg -crf 20.0 -vcodec libx264 -filter:v scale=1280:720 -preset slow -an -coder 1 -flags +loop -cmp chroma -partitions +parti4x4+partp8x8+partb8x8 -me_method hex -subq 6 -me_range 16 -g 250 -keyint_min 25 -sc_threshold 40 -i_qfactor 0.71 -b_strategy 1 -threads 0  ${OUTPUT_FILENAME}.mp4"
+echo "ffmpeg command: $ffmpeg_cmd "
+eval $ffmpeg_cmd
+
+# fin.
