@@ -17,17 +17,19 @@ BIN_COMPOSITE=composite.exe
 BIN_FFMPEG=ffmpeg.exe
 NECESSARY_TOOLS="$BIN_IDENTIFY $BIN_CONVERT $BIN_COMPOSITE $BIN_FFMPEG"
 
-# I/O defaults 
+# I-O/command line defaults 
 INPUT_FOLDER=
 INPUT_PATTERN="*.JPG"
 OUTPUT_FILENAME=
 TEMPF="slideshow_tmp" #does not work with abs paths 
 IMG_PROPS="${TEMPF}/image_properties.txt"
-STILL_FRAMES_PER_IMAGE=5
-BLEND_FRAMES_PER_IMAGE=3
-VIDEO_FPS=25
-TARGET_RESIZE=0.5
 OVERWRITE=0
+
+# Flipcore core configuration 
+STILL_FRAMES_PER_IMAGE=5
+BLEND_FRAMES_PER_IMAGE=5
+VIDEO_FPS=30
+TARGET_RESIZE=0.5
 
 function show_help () {
 	# Prints out information to the script user
