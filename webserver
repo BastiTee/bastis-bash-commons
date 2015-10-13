@@ -2,9 +2,9 @@
 # A simple webserver framework written in Bash
 # Web resources:
 # http://www.redspin.com/blog/labs/2009/07/01/handling-html-in-the-shell/
-
+#
 # Include Basti's Bash Commons
-if [ ! -v $( command -v "bbc.sh" ) ]; then source bbc.sh; else exit; fi
+if [ ! -v $( command -v "bbc" ) ]; then source bbc; else exit; fi
 # We need bash v4 or later, because we want to use arrays
 if [ $( bbc_get_bash_version | cut -b1 ) != 4 ]
 then

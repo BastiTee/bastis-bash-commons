@@ -9,6 +9,9 @@
 # Example use
 #    timeout 5 countdown
 #
+# Taken from https://www.ict.griffith.edu.au/anthony/software/timeout.sh
+# All credits to Anthony Thyssen <A.Thyssen@griffith.edu.au>
+#
 PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
 PROGDIR=`dirname $PROGNAME`            # extract directory of program
 PROGNAME=`basename $PROGNAME`          # base name of program

@@ -2,7 +2,7 @@
 # Example implementation of webserver framework script
 
 # Include Webserver stub
-if [ ! -v $( command -v "webserver.sh" ) ]; then source webserver.sh; else exit; fi
+if [ ! -v $( command -v "webserver" ) ]; then source webserver; else exit; fi
 
 # Now we override the framework methods to implement our own business logic
 function process_GET () {
