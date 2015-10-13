@@ -10,7 +10,7 @@
 # will create a nice movement effect like in a classic flipbook.  
 ###############################################################################
 
-# Binary paths TODO: Read by defaults and check existence 
+# Binary paths 
 BIN_IDENTIFY=identify.exe
 BIN_CONVERT=convert.exe
 BIN_COMPOSITE=composite.exe 
