@@ -1,5 +1,9 @@
 #!/bin/bash
+# ==============================================================================
+# WEBSERVER EXAMPLE 
 # Example implementation of webserver framework script
+#
+# ==============================================================================
 
 # Include Webserver stub
 if [ ! -v $( command -v "webserver" ) ]; then source webserver; else exit; fi

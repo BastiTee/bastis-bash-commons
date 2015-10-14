@@ -1,4 +1,10 @@
 #!/bin/bash
+# ==============================================================================
+# TABLE
+# A tool to pipe unformatted table-like data in and get a formatted table out.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
 
 # default variables  
 INPUT_COLUMN_SEPARATOR=" " 

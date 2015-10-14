@@ -1,6 +1,7 @@
 #!/bin/bash
-###############################################################################
-# flipbook-generator 
+# ==============================================================================
+# FLIPBOOK-GENERATOR
+# Create neat little flipbook slideshows from your image folders.  
 #
 # Providing an image folder with images having the same basic dimensions (i.e., 
 # regardless of the orientation so that 500x300 and 300x500 are considered to
@@ -8,7 +9,9 @@
 # unordered and unfiltered image sets that you've just dumped from your camera.
 # Exploiting burst image sets and redundant pictures of the same scene, this 
 # will create a nice movement effect like in a classic flipbook.  
-###############################################################################
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
 
 # Binary paths 
 BIN_IDENTIFY=identify.exe

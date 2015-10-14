@@ -1,8 +1,14 @@
 #!/bin/bash
+# ==============================================================================
+# WEBSERVER
 # A simple webserver framework written in Bash
+#
 # Web resources:
 # http://www.redspin.com/blog/labs/2009/07/01/handling-html-in-the-shell/
 #
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
 # Include Basti's Bash Commons
 if [ ! -v $( command -v "bbc" ) ]; then source bbc; else exit; fi
 # We need bash v4 or later, because we want to use arrays
