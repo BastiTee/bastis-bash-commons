@@ -26,24 +26,48 @@ IMG_PROPS="${TEMPF}/image_properties.txt"
 OVERWRITE=0
 RECODE_ONLY=0
 
-# Flipcore core configuration 
-STILL_FRAMES_PER_IMAGE=7
-BLEND_FRAMES_PER_IMAGE=5
-VIDEO_FPS=35
-TARGET_RESIZE=0.5
+# Flipbook core configuration 
+STILL_FRAMES_PER_IMAGE=
+BLEND_FRAMES_PER_IMAGE=
+VIDEO_FPS=
+TARGET_RESIZE=
+DEFAULT_CONFIG_STRING="7,5,35,0.5"
 
 function show_help () {
 	# Prints out information to the script user
 	# $1 = Exit code
 
-	echo -e "\nUsage: `basename $0` -i <input-folder> -o <output-filename> [-p <file-pattern>] [-f] [-v]\n"
+	echo -e "\nUsage: `basename $0` -i <input-folder> -o <output-filename> [-p <file-pattern>] [-c <configuration>] [-f] [-v]\n"
 	echo -e "\t-i <input-folder>\tInput  folder."
 	echo -e "\t-o <output-filename>\tOutput filename without suffix, e.g., my-flipbook"
 	echo -e "\t-p <file-pattern>\tInput file pattern (default: \"${INPUT_PATTERN}\")"
 	echo -e "\t-f\t\t\tForce overwrite of existing temporary files"
 	echo -e "\t-v\t\t\tOnly re-encode output video file (disables any previous steps)"
+	echo -e "\t-c <configuration>\t4-part configuration string for flipbook (default: \"$DEFAULT_CONFIG_STRING\")"
+	echo -e "\t\t\t\t1. Number of freeze frames per source image"
+	echo -e "\t\t\t\t2. Number of blending frames between two source images"
+	echo -e "\t\t\t\t3. Video image rate in frames per second"
+	echo -e "\t\t\t\t4. Rescale factor between input image dimensions and output video"
 	echo
 	exit $1
+}
+
+function set_core_configuration () {
+	echo "Using config string: \"$1\""
+	if [ $( echo $1 | tr "," " " | wc -w ) != 4 ]
+	then 
+		echo "Configuration string is malformed."
+		show_help 1
+	fi  
+	config_string=$( echo $1 | tr "," " ")
+	STILL_FRAMES_PER_IMAGE=$( echo $config_string | awk '{print $1}' )
+	BLEND_FRAMES_PER_IMAGE=$( echo $config_string | awk '{print $2}' )
+	VIDEO_FPS=$( echo $config_string | awk '{print $3}' )
+	TARGET_RESIZE=$( echo $config_string | awk '{print $4}' )
+	# TODO: validate correctness 
+	echo -e "Freeze frames: $STILL_FRAMES_PER_IMAGE\n\
+Blend frames: $BLEND_FRAMES_PER_IMAGE\nfps: $VIDEO_FPS\n\
+resize: $TARGET_RESIZE"
 }
 
 function pad_number () {
@@ -72,7 +96,7 @@ done
 if [ $tools_available == 0 ]; then show_help 1; fi  
 
 # Read command line 
-while getopts "hi:p:fo:v" opt; do
+while getopts "hi:p:fo:vc:" opt; do
 	case "$opt" in
 	h)
 		show_help 0
@@ -87,16 +111,19 @@ while getopts "hi:p:fo:v" opt; do
 		;;
 	v)  RECODE_ONLY=1
 		;;
+	c)  DEFAULT_CONFIG_STRING=$OPTARG
+		;;
 	*)
 		show_help 1
 		;;
 	esac
 done
 
-# Check cmd properties 
+# Check cmd arguments 
 if [ -v $INPUT_FOLDER ]; then echo "Input folder not set."; show_help 1; fi 
 if [ ! -e $INPUT_FOLDER ]; then echo "Input folder does not exist."; show_help 1; fi
 if [ -v $OUTPUT_FILENAME ]; then echo "Output filename not set."; show_help 1; fi  
+set_core_configuration "$DEFAULT_CONFIG_STRING"
 
 # prepare environment 
 cd $INPUT_FOLDER 
