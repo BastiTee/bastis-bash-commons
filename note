@@ -1,0 +1,42 @@
+#!/bin/bash
+# ==============================================================================
+# NOTEBOOK
+# A tool to simply pipe bash output mdf-compatible to a previously defined 
+# bash notebook.
+# Usage: <any command on the command line> | note <optional note> 
+# E.g.:  ls -l | note "File listing" 
+#  
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+if [ -v $BASH_NOTEBOOK ]
+then
+	echo "You must set the environment variable 'BASH_NOTEBOOK' pointing to the\
+ desired text file."
+	exit 1
+fi
+
+# find out timestamps, titles and the command that was executed 
+timestamp=`date +"%Y-%m-%d %T"`
+note_title=$timestamp
+
+if [ "$1" != "" ]
+then
+	note_title=$1
+fi
+
+# print the note header 
+echo "" >> $BASH_NOTEBOOK # empty line 
+echo "## [bash] $note_title" >> $BASH_NOTEBOOK
+echo -e "\tPATH: `pwd`" >> $BASH_NOTEBOOK
+echo -e "\t@$timestamp" >> $BASH_NOTEBOOK
+echo -e "---" >> $BASH_NOTEBOOK
+
+# print the input stream 
+while read data; do
+	echo -e "\t$data" >> $BASH_NOTEBOOK
+	echo -e "$data"
+done
+
+# inform user that we did all this 
+echo -e "\n-- output also piped to $BASH_NOTEBOOK"
