@@ -1,0 +1,50 @@
+#!/bin/bash
+# ==============================================================================
+# FAKENAME
+# Generate a new random fake name using public available websites.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+ALLOWED_GENDERS="m f"
+ALLOWED_TYPES="hobbit klingone german english"
+GENDER=$( echo $ALLOWED_GENDERS | cut -d" " -f1 )
+TYPE=$( echo $ALLOWED_TYPES | cut -d" " -f1 )
+
+function show_help () {
+	echo -e "Generate a new random fake name ."
+	echo -e "\nUsage: `basename $0` [-g <GENDER>] [-t <TYPE>]\n"
+	echo -e "\t-g <GENDER>\t\tGender of the person (supported: $ALLOWED_GENDERS; default: '$GENDER')"
+	echo -e "\t-t <TYPE>\t\tName type set (supported: $ALLOWED_TYPES; default: '$TYPE')"
+	exit 1
+}
+
+while getopts "hg:t:" opt; do
+    case "$opt" in
+    g)
+        GENDER=$OPTARG
+        ;;
+	t)  TYPE=$OPTARG
+		;;
+	h)  show_help
+		;;
+	*)	echo "Illegal argument."; show_help
+		;;
+	esac
+done
+
+gender_url=
+type_url=
+
+if [ $GENDER == "f" ]; then gender_url="female"; 
+elif [ $GENDER == "m" ]; then gender_url="male"; 
+else echo "Unknown gender."; show_help; fi 
+
+if [ $TYPE == "hobbit" ]; then type_url="hobbit"; 
+elif [ $TYPE == "klingone" ]; then type_url="tlh";
+elif [ $TYPE == "german" ]; then type_url="gr"; 
+elif [ $TYPE == "english" ]; then type_url="en";  
+else echo "Unknown type."; show_help; fi 
+
+full_url="http://de.fakenamegenerator.com/gen-${gender_url}-${type_url}-gr.php"
+curl -s "$full_url" | grep "<h3>" | sed -r -e "s/[ ]*<[^>]+>[ ]*//g"

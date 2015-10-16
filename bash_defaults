@@ -30,11 +30,9 @@ alias grep='grep --color'                     # show differences in colour
 alias egrep='egrep --color=auto'              # show differences in colour
 alias fgrep='fgrep --color=auto'              # show differences in colour
 alias ls='ls -hF --color=tty'                 # classify files in colour
-alias ll='ls -l'                              # long list
-alias la='ls -A'                              # all but . and ..
-alias l='ls -CF'                              #
-alias ..="cd .."
-alias ...="cd ../../"
+alias ll='ls -lA'                             # long list
+alias ..='cd ..'
+alias ...='cd ../../'
 
 # ==============================================================================
 echo "Loading basti's bash defaults done." 
