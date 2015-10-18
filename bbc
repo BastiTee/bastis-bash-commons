@@ -135,33 +135,40 @@ function bbc_split_on_pattern () {
 	print > base"."sprintf("%05d", i)"."suff }' ${1}
 }
 
+function bbc () {
+	# List overview of all functions inside this script 
+	
+	bbc_whereami
+	echo "bbc..."
+}
+
 ################################################################################
 # COMMAND LINE PARSING RECIPES
 ################################################################################
 
-function show_help () {
+# function show_help () {
 	# Prints out information to the script user
 	# $1 = Exit code
 
-	echo -e "\nUsage: `basename $0` [-e <message>]\n"
-	echo -e "\t-e <message>\tExample argument."
-	echo
-	exit $1
-}
+	# echo -e "\nUsage: `basename $0` [-e <message>]\n"
+	# echo -e "\t-e <message>\tExample argument."
+	# echo
+	# exit $1
+# }
 
-function parse_command_line ()   {
+# function parse_command_line ()   {
 	# Parses the command line for the given options and reacts appropriately.
 
-	while getopts "he:l" opt; do
-		case "$opt" in
-		h)
-			show_help 0
-			;;
-		e)  echo $OPTARG
-			;;
-		*)
-			show_help 1
-			;;
-		esac
-	done
-}
+	# while getopts "he:l" opt; do
+		# case "$opt" in
+		# h)
+			# show_help 0
+			# ;;
+		# e)  echo $OPTARG
+			# ;;
+		# *)
+			# show_help 1
+			# ;;
+		# esac
+	# done
+# }

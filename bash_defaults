@@ -5,24 +5,37 @@
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
-
+# Make sure this only gets sourced once
+[[ -z ${USER_BASHRC} ]] && USER_BASHRC="1" || return
+# Find out location of sourced default file 
+curr_loc=${BASH_SOURCE[0]}
+if [ ! -v $curr_loc ]; then 
+	# .. and if successful source bash commons functions as well 
+	curr_loc=$( echo $curr_loc | sed -r -e "s/\/[^\/]+$//g" )
+	source ${curr_loc}/bbc 
+	echo "Sourcing basti's bash commons functions done."
+fi
 # Locale settings  
 export LANG="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
-
 # If not running interactively, don't do anything
 [[ "$-" != *i* ]] && return
-
 # Don't use ^D to exit
 set -o ignoreeof
-
+# Don't wait for job termination notification
+set -o notify
 # Make bash append rather than overwrite the history on disk
 shopt -s histappend
-
 # Don't put duplicate lines in the history.
 export HISTCONTROL=$HISTCONTROL${HISTCONTROL+,}ignoredups
-
+# Ignore some controlling instructions
+# HISTIGNORE is a colon-delimited list of patterns which should be excluded.
+# The '&' is a special pattern which suppresses duplicate entries.
+export HISTIGNORE=$'[ \t]*:&:[fb]g:exit'
+export HISTIGNORE=$'[ \t]*:&:[fb]g:exit:ls' # Ignore the ls command as well
+# Whenever displaying the prompt, write the previous line to disk
+export PROMPT_COMMAND="history -a"
 # Alias settings 
 alias less='less -r'                          # raw control characters
 alias whence='type -a'                        # where, of a sort
@@ -35,6 +48,8 @@ alias la='ls -A'                              # all but . and ..
 alias l='ls -CF'                              #
 alias ..="cd .."
 alias ...="cd ../../"
-
 # ==============================================================================
 echo "Loading basti's bash defaults done." 
+# ==============================================================================
+# Show full path in babun prompt (needs to be in .babunrc manually)
+# export PS1="\[\033[00;34m\]{ \[\033[01;34m\]\w \[\033[00;34m\]}\[\033[01;32m\] $( git rev-parse --abbrev-ref HEAD 2> /dev/null || echo ) \[\033[01;31m\]» \[\033[00m\]"
