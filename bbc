@@ -86,89 +86,72 @@ function bbc_print_xml () {
 }
 
 function bbc_run_psql () {
-	# Runs a given postgresql command through the psql command line.
-	# ATTENTION: This method assumes that $PG_PASS $PG_USSER and $PG_DB
-	# are set somewhere in your script.
-	# $1 = PostgreSQL Query with escaped quotation marks
+	bbc_init_help "$FUNCNAME" 1 "Runs a given postgresql command through the \
+psql command line. ATTENTION: This method assumes that \$PG_PASS \$PG_USSER \
+and \$PG_DB are set somewhere in your script.\n[1] PostgreSQL Query with \
+escaped quotation marks." $@ || return $?
 
 	export PGPASSWORD=$PG_PASS
 	psql -h localhost -t -F " " -A -c "$1" $PG_DB $PG_USER
 }
 
 function bbc_get_datetime () {
-	# Returns a file-safe datetime timestamp to be used in files.
-
+	bbc_init_help "$FUNCNAME" 0 "Returns a file-safe datetime timestamp to \
+be used in files." $@ || return $?
+	
 	date "+%Y%m%d-%H%M%S"
 }
 
 function bbc_whereami () {
-	# Returns the location of the current script.
+	bbc_init_help "$FUNCNAME" 0 "Returns the location of the current script."\
+	$@ || return $?
 
 	location=$( readlink -f $( dirname $0 ))
 	echo ${location}/$( basename $0 )
 }
 
 function bbc_get_filename () {
-	# Returns filename without path and suffix from given filepath.
-	# $1 = Path to file
-
+	bbc_init_help "$FUNCNAME" 1 "Returns filename without path and suffix \
+from given filepath.\n[1] Path to file." $@ || return $?
+	
 	filename=$(basename "$1")
 	echo ${filename%.*}
 }
 
 function bbc_get_filesuffix () {
-	# Returns fie suffix without path and filename from given filepath.
-	# $1 = Path to file
-
+	bbc_init_help "$FUNCNAME" 1 "Returns the file suffix without path and \
+filename from given filepath.\n[1] Path to file." $@ || return $?
+	
 	filename=$(basename "$1")
 	echo ${filename##*.}
 }
 
 function bbc_split_on_pattern () {
-	# Splits a file on a given regex pattern into multiple files.
-	# $1 = Input file
-	# $2 = Regular expression to split file at
-
+	bbc_init_help "$FUNCNAME" 2 "Splits a file on a given regex pattern into \
+multiple files.\n[1] Input file.\n[2] Regular expression to split file at." \
+$@ || return $?
+	
 	base=$( bbc_get_filename $1 )
 	suff=$( bbc_get_filesuffix $1 )
 	awk -v pat="$2" -v base=$base -v suff=$suff '$0 ~ pat { i++ }{ \
 	print > base"."sprintf("%05d", i)"."suff }' ${1}
 }
 
-function bbc () {
-	# List overview of all functions inside this script 
-	
-	bbc_whereami
-	echo "bbc..."
+################################################################################
+
+function bbc_init_help () {
+	function_name="$1"; shift
+	arguments=$1; shift
+	function_help="$1"; shift
+	if [ "$1" == "-h" ] || [ "$1" == "--h" ] || [ "$1" == "-help" ] || \
+	[ "$1" == "--help" ]
+	then 
+		printf "\nUsage: ${function_name} "
+		for i in $( seq 1 $arguments ); do printf "[$i] "; done
+		printf "\n\n"
+		echo -e "${function_help}\n"
+		return 1
+	else
+		return 0
+	fi
 }
-
-################################################################################
-# COMMAND LINE PARSING RECIPES
-################################################################################
-
-# function show_help () {
-	# Prints out information to the script user
-	# $1 = Exit code
-
-	# echo -e "\nUsage: `basename $0` [-e <message>]\n"
-	# echo -e "\t-e <message>\tExample argument."
-	# echo
-	# exit $1
-# }
-
-# function parse_command_line ()   {
-	# Parses the command line for the given options and reacts appropriately.
-
-	# while getopts "he:l" opt; do
-		# case "$opt" in
-		# h)
-			# show_help 0
-			# ;;
-		# e)  echo $OPTARG
-			# ;;
-		# *)
-			# show_help 1
-			# ;;
-		# esac
-	# done
-# }
