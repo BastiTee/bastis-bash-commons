@@ -10,26 +10,26 @@
 # ==============================================================================
 
 function bbc_get_bash_version () {
-	# Returns the bash version as separated string to check for compatibility
+	init_help_output "$FUNCNAME" 0 "Returns the bash version as separated string \
+to check for compatibility." $@ || return $?
 
 	bash --version | head -n1 | sed -r -e "s/^[^0-9]+([0-9\\.]+).*/\1/g" |\
 	tr "." " "
 }
 
 function bbc_log () {
-	# A message logger that highlights or hides the given text according to
-	# the script-wide logging configuration
-	# $1 = Message to be displayed
-	# $2 = Log level (not implemented yet)
-
+	init_help_output "$FUNCNAME" 1 "A message logger that highlights or hides the \
+given text according to the script-wide logging configuration\n[1] Message to \
+be displayed." $@ || return $?
+	
 	bbc_exe tput setaf 2
 	echo $@
 	bbc_exe tput sgr 0
 }
 
 function bbc_askpass () {
-	# Asks the user for a password
-	# $1 = Optional alternate question, e.g. "Enter your google.com password"
+	init_help_output "$FUNCNAME" 1 "Asks the user for a password.\n[1] Optional \
+alternate question, e.g. \"Enter your google.com password\"." $@ || return $?
 
 	question="Enter password"
 	if [ $# -ge 1 ]; then question=$1; fi
@@ -38,8 +38,8 @@ function bbc_askpass () {
 }
 
 function bbc_yesno () {
-	# Asks the user a yes/no question and returns 1 if 'yes' and 0 if 'no'
-	# $1 = The question to ask
+	init_help_output "$FUNCNAME" 1 "Asks the user a yes/no question and returns \
+1 if 'yes' and 0 if 'no'.\n[1] The question to ask." $@ || return $?
 
 	read -p "$1 (y/n)" -n 1 -r
 	echo "" # (optional) move to a new line
@@ -52,22 +52,22 @@ function bbc_yesno () {
 }
 
 function bbc_urlescape () {
-	# URL-escapes the given string
-	# $1 = The string to be escaped.
+	init_help_output "$FUNCNAME" 1 "URL-escapes the given string.\n[1] The \
+string to be escaped." $@ || return $?
 
-	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" -e "s/\\$/%24/g" \
-	-e "s/&/%26/g" -e "s/'/%27/g" -e "s/(/%28/g" -e "s/)/%29/g" \
-	-e "s/*/%2A/g" -e "s/+/%2B/g" -e "s/,/%2C/g" -e "s/\//%2F/g" -e "s/:/%3A/g" \
-	-e "s/;/%3B/g" -e "s/=/%3D/g" -e "s/?/%3F/g" -e "s/@/%40/g" -e "s/\[/%5B/g" \
-	-e "s/\]/%5D/g"
+	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" \
+	-e "s/\\$/%24/g" -e "s/&/%26/g" -e "s/'/%27/g" -e "s/(/%28/g" \
+	-e "s/)/%29/g" -e "s/*/%2A/g" -e "s/+/%2B/g" -e "s/,/%2C/g" \
+	-e "s/\//%2F/g" -e "s/:/%3A/g" -e "s/;/%3B/g" -e "s/=/%3D/g" \
+	-e "s/?/%3F/g" -e "s/@/%40/g" -e "s/\[/%5B/g" -e "s/\]/%5D/g"
 
 }
 
 function bbc_exe () {
-	# Tests if a command does exist and, if yes, runs it. This comes in handy
-	# if you are unsure whether a tool exists.
-	# $1 = Command to be executed
-
+	init_help_output "$FUNCNAME" 1 "Tests if a command does exist and, if yes, \
+runs it. This comes in handy if you are unsure whether a tool exists.\n\
+[1] Command to be executed." $@ || return $?
+	
 	if [ ! -v $( command -v $1 ) ]
 	then
 		eval $@
@@ -75,9 +75,9 @@ function bbc_exe () {
 }
 
 function bbc_print_xml () {
-	# Pretty-prints an XML string to the command line.
-	# $1 = XML file
-
+	init_help_output "$FUNCNAME" 1 "Pretty-prints an XML string to the command \
+line.\n[1] XML-file." $@ || return $?
+	
 	bbc_exe tput setaf 2
 	echo
 	xmllint --format $1
@@ -86,7 +86,7 @@ function bbc_print_xml () {
 }
 
 function bbc_run_psql () {
-	bbc_init_help "$FUNCNAME" 1 "Runs a given postgresql command through the \
+	init_help_output "$FUNCNAME" 1 "Runs a given postgresql command through the \
 psql command line. ATTENTION: This method assumes that \$PG_PASS \$PG_USSER \
 and \$PG_DB are set somewhere in your script.\n[1] PostgreSQL Query with \
 escaped quotation marks." $@ || return $?
@@ -96,14 +96,14 @@ escaped quotation marks." $@ || return $?
 }
 
 function bbc_get_datetime () {
-	bbc_init_help "$FUNCNAME" 0 "Returns a file-safe datetime timestamp to \
+	init_help_output "$FUNCNAME" 0 "Returns a file-safe datetime timestamp to \
 be used in files." $@ || return $?
 	
 	date "+%Y%m%d-%H%M%S"
 }
 
 function bbc_whereami () {
-	bbc_init_help "$FUNCNAME" 0 "Returns the location of the current script."\
+	init_help_output "$FUNCNAME" 0 "Returns the location of the current script."\
 	$@ || return $?
 
 	location=$( readlink -f $( dirname $0 ))
@@ -111,7 +111,7 @@ function bbc_whereami () {
 }
 
 function bbc_get_filename () {
-	bbc_init_help "$FUNCNAME" 1 "Returns filename without path and suffix \
+	init_help_output "$FUNCNAME" 1 "Returns filename without path and suffix \
 from given filepath.\n[1] Path to file." $@ || return $?
 	
 	filename=$(basename "$1")
@@ -119,7 +119,7 @@ from given filepath.\n[1] Path to file." $@ || return $?
 }
 
 function bbc_get_filesuffix () {
-	bbc_init_help "$FUNCNAME" 1 "Returns the file suffix without path and \
+	init_help_output "$FUNCNAME" 1 "Returns the file suffix without path and \
 filename from given filepath.\n[1] Path to file." $@ || return $?
 	
 	filename=$(basename "$1")
@@ -127,7 +127,7 @@ filename from given filepath.\n[1] Path to file." $@ || return $?
 }
 
 function bbc_split_on_pattern () {
-	bbc_init_help "$FUNCNAME" 2 "Splits a file on a given regex pattern into \
+	init_help_output "$FUNCNAME" 2 "Splits a file on a given regex pattern into \
 multiple files.\n[1] Input file.\n[2] Regular expression to split file at." \
 $@ || return $?
 	
@@ -137,9 +137,11 @@ $@ || return $?
 	print > base"."sprintf("%05d", i)"."suff }' ${1}
 }
 
-################################################################################
+# ==============================================================================
+# INTERNAL FUNCTIONS
+# ==============================================================================
 
-function bbc_init_help () {
+function init_help_output () {
 	function_name="$1"; shift
 	arguments=$1; shift
 	function_help="$1"; shift
@@ -155,3 +157,11 @@ function bbc_init_help () {
 		return 0
 	fi
 }
+
+# if called directly, print all help files 
+for fct in $( cat $( bbc_whereami ) | grep -e "^function bbc_.*" | \
+sed -e "s/^function[ ]*//g" -e "s/ (.*//g" )
+do
+	echo "================================================================="
+	eval $fct -h 
+done
