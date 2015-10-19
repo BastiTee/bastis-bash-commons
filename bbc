@@ -10,7 +10,7 @@
 # ==============================================================================
 
 function bbc_get_bash_version () {
-	init_help_output "$FUNCNAME" 0 "Returns the bash version as separated string \
+	init_help_output "$FUNCNAME" "Returns the bash version as separated string \
 to check for compatibility." $@ || return $?
 
 	bash --version | head -n1 | sed -r -e "s/^[^0-9]+([0-9\\.]+).*/\1/g" |\
@@ -18,8 +18,8 @@ to check for compatibility." $@ || return $?
 }
 
 function bbc_log () {
-	init_help_output "$FUNCNAME" 1 "A message logger that highlights or hides the \
-given text according to the script-wide logging configuration\n[1] Message to \
+	init_help_output "$FUNCNAME" "A message logger that highlights or hides the \
+given text according to the script-wide logging configuration.[1] Message to \
 be displayed." $@ || return $?
 	
 	bbc_exe tput setaf 2
@@ -28,7 +28,7 @@ be displayed." $@ || return $?
 }
 
 function bbc_askpass () {
-	init_help_output "$FUNCNAME" 1 "Asks the user for a password.\n[1] Optional \
+	init_help_output "$FUNCNAME" "Asks the user for a password.[1] Optional \
 alternate question, e.g. \"Enter your google.com password\"." $@ || return $?
 
 	question="Enter password"
@@ -38,8 +38,8 @@ alternate question, e.g. \"Enter your google.com password\"." $@ || return $?
 }
 
 function bbc_yesno () {
-	init_help_output "$FUNCNAME" 1 "Asks the user a yes/no question and returns \
-1 if 'yes' and 0 if 'no'.\n[1] The question to ask." $@ || return $?
+	init_help_output "$FUNCNAME" "Asks the user a yes/no question and returns \
+1 if 'yes' and 0 if 'no'.[1] The question to ask." $@ || return $?
 
 	read -p "$1 (y/n)" -n 1 -r
 	echo "" # (optional) move to a new line
@@ -52,7 +52,7 @@ function bbc_yesno () {
 }
 
 function bbc_urlescape () {
-	init_help_output "$FUNCNAME" 1 "URL-escapes the given string.\n[1] The \
+	init_help_output "$FUNCNAME" "URL-escapes the given string.[1] The \
 string to be escaped." $@ || return $?
 
 	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" \
@@ -64,8 +64,8 @@ string to be escaped." $@ || return $?
 }
 
 function bbc_exe () {
-	init_help_output "$FUNCNAME" 1 "Tests if a command does exist and, if yes, \
-runs it. This comes in handy if you are unsure whether a tool exists.\n\
+	init_help_output "$FUNCNAME" "Tests if a command does exist and, if yes, \
+runs it. This comes in handy if you are unsure whether a tool exists.\
 [1] Command to be executed." $@ || return $?
 	
 	if [ ! -v $( command -v $1 ) ]
@@ -75,8 +75,8 @@ runs it. This comes in handy if you are unsure whether a tool exists.\n\
 }
 
 function bbc_print_xml () {
-	init_help_output "$FUNCNAME" 1 "Pretty-prints an XML string to the command \
-line.\n[1] XML-file." $@ || return $?
+	init_help_output "$FUNCNAME" "Pretty-prints an XML string to the command \
+line.[1] XML-file." $@ || return $?
 	
 	bbc_exe tput setaf 2
 	echo
@@ -86,9 +86,9 @@ line.\n[1] XML-file." $@ || return $?
 }
 
 function bbc_run_psql () {
-	init_help_output "$FUNCNAME" 1 "Runs a given postgresql command through the \
+	init_help_output "$FUNCNAME" "Runs a given postgresql command through the \
 psql command line. ATTENTION: This method assumes that \$PG_PASS \$PG_USSER \
-and \$PG_DB are set somewhere in your script.\n[1] PostgreSQL Query with \
+and \$PG_DB are set somewhere in your script.[1] PostgreSQL Query with \
 escaped quotation marks." $@ || return $?
 
 	export PGPASSWORD=$PG_PASS
@@ -96,14 +96,14 @@ escaped quotation marks." $@ || return $?
 }
 
 function bbc_get_datetime () {
-	init_help_output "$FUNCNAME" 0 "Returns a file-safe datetime timestamp to \
+	init_help_output "$FUNCNAME" "Returns a file-safe datetime timestamp to \
 be used in files." $@ || return $?
 	
 	date "+%Y%m%d-%H%M%S"
 }
 
 function bbc_whereami () {
-	init_help_output "$FUNCNAME" 0 "Returns the location of the current script."\
+	init_help_output "$FUNCNAME" "Returns the location of the current script."\
 	$@ || return $?
 
 	location=$( readlink -f $( dirname $0 ))
@@ -111,24 +111,24 @@ function bbc_whereami () {
 }
 
 function bbc_get_filename () {
-	init_help_output "$FUNCNAME" 1 "Returns filename without path and suffix \
-from given filepath.\n[1] Path to file." $@ || return $?
+	init_help_output "$FUNCNAME" "Returns filename without path and suffix \
+from given filepath.[1] Path to file." $@ || return $?
 	
 	filename=$(basename "$1")
 	echo ${filename%.*}
 }
 
 function bbc_get_filesuffix () {
-	init_help_output "$FUNCNAME" 1 "Returns the file suffix without path and \
-filename from given filepath.\n[1] Path to file." $@ || return $?
+	init_help_output "$FUNCNAME" "Returns the file suffix without path and \
+filename from given filepath.[1] Path to file." $@ || return $?
 	
 	filename=$(basename "$1")
 	echo ${filename##*.}
 }
 
 function bbc_split_on_pattern () {
-	init_help_output "$FUNCNAME" 2 "Splits a file on a given regex pattern into \
-multiple files.\n[1] Input file.\n[2] Regular expression to split file at." \
+	init_help_output "$FUNCNAME" "Splits a file on a given regex pattern into \
+multiple files.[1] Input file.[2] Regular expression to split file at." \
 $@ || return $?
 	
 	base=$( bbc_get_filename $1 )
@@ -137,31 +137,54 @@ $@ || return $?
 	print > base"."sprintf("%05d", i)"."suff }' ${1}
 }
 
+function bbc_justify_text () {
+	init_help_output "$FUNCNAME" "Folds the given text to either at a fixed \
+number of columns or, if obtainable, the width of the console or at a fixed \
+with of 70.[1] Input text.[2] Optional line width." \
+	$@ || return $?
+
+	columns=$2
+	if [ -v $columns ]; then columns=$( bbc_exe "tput cols" ); fi
+	if [ -v $columns ]; then columns=70; fi
+	echo -e "$1" | fold -s -w $columns 
+}
+
 # ==============================================================================
 # INTERNAL FUNCTIONS
 # ==============================================================================
 
 function init_help_output () {
 	function_name="$1"; shift
-	arguments=$1; shift
 	function_help="$1"; shift
+	
 	if [ "$1" == "-h" ] || [ "$1" == "--h" ] || [ "$1" == "-help" ] || \
 	[ "$1" == "--help" ]
-	then 
-		printf "\nUsage: ${function_name} "
-		for i in $( seq 1 $arguments ); do printf "[$i] "; done
-		printf "\n\n"
-		echo -e "${function_help}\n"
+	then
+		# preprocess help output 
+		arguments=$( grep -o '[[0-9]]' <<< "$function_help" | wc -l )
+		function_help=$( echo -e "$function_help" | sed -e "s/\[1\]/\n[1]/g" )
+		function_help=$( echo -e "$function_help" | sed -r -e "s/(\[[0-9]\])/\n\1/g" )
+		# construct help output 
+		help_string="\nUsage: ${function_name}"
+		arg_string=
+		for i in $( seq 1 $arguments ); do arg_string="$arg_string[$i] "; done
+		help_string="${help_string} ${arg_string}\n\n${function_help}"
+		# print help string 
+		bbc_justify_text "$help_string" 70
 		return 1
 	else
 		return 0
 	fi
 }
 
-# if called directly, print all help files 
-for fct in $( cat $( bbc_whereami ) | grep -e "^function bbc_.*" | \
-sed -e "s/^function[ ]*//g" -e "s/ (.*//g" )
-do
-	echo "================================================================="
-	eval $fct -h 
-done
+function init_manual () {
+	for fct in $( cat $( bbc_whereami ) | grep -e "^function bbc_.*" | \
+	sed -e "s/^function[ ]*//g" -e "s/ (.*//g" )
+	do
+		eval $fct -h 
+		printf '\n'; printf '=%.0s' {1..70}; printf '\n'
+	done
+}
+
+# if called directly, print all help sections 
+[[ $_ != $0 ]] && return 0 || init_manual
