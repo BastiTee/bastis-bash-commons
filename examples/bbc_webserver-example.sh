@@ -6,7 +6,7 @@
 # ==============================================================================
 
 # Include Webserver stub
-if [ ! -v $( command -v "webserver" ) ]; then source webserver; else exit; fi
+if [ ! -v $( command -v "bbc_webserver" ) ]; then source bbc_webserver; else exit; fi
 
 # Now we override the framework methods to implement our own business logic
 function process_GET () {
