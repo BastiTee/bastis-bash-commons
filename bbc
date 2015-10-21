@@ -9,6 +9,13 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
+function bbc_remove_duplicate_empty_lines () {
+	init_help_output "$FUNCNAME" "Removes duplicate empty lines read from \
+standard-in." $@ || return $?
+	
+	sed 'N;/^\n$/d;P;D' < /dev/stdin 
+}
+
 function bbc_get_bash_version () {
 	init_help_output "$FUNCNAME" "Returns the bash version as separated string \
 to check for compatibility." $@ || return $?
@@ -103,11 +110,16 @@ be used in files." $@ || return $?
 }
 
 function bbc_whereami () {
-	init_help_output "$FUNCNAME" "Returns the location of the current script."\
+	init_help_output "$FUNCNAME" "Returns the location of the current script.\
+[1] If '-d' then return parent dirname only."\
 	$@ || return $?
 
 	location=$( readlink -f $( dirname $0 ))
-	echo ${location}/$( basename $0 )
+	if [ "$1" == "-d" ]; then
+		echo ${location}
+	else
+		echo ${location}/$( basename $0 )
+	fi
 }
 
 function bbc_get_filename () {
