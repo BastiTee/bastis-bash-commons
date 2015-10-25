@@ -43,7 +43,8 @@ pattern." $@ || return $?
 	no_hits=0
 	first_hit=
 	pattern=$( echo "*${1}*" | sed -r -e "s/[\/]+/\//g" -e "s/\//*\/*/g" )
-	command="find -maxdepth $MAX_DEPTH -type d -iwholename \"$pattern\" -prune 2>/dev/null"
+	command="find -maxdepth $MAX_DEPTH -type d -iwholename \"$pattern\" \
+-prune 2>/dev/null"
 	# echo "--- warping to: '${pattern}' with '${command}'"
 	for hit in $( eval $command ) 
 	do
@@ -70,16 +71,6 @@ to check for compatibility." $@ || return $?
 
 	bash --version | head -n1 | sed -r -e "s/^[^0-9]+([0-9\\.]+).*/\1/g" |\
 	tr "." " "
-}
-
-function bbc_log () {
-	init_help_output "$FUNCNAME" "A message logger that highlights or hides the \
-given text according to the script-wide logging configuration.[1] Message to \
-be displayed." $@ || return $?
-	
-	bbc_exe tput setaf 2
-	echo $@
-	bbc_exe tput sgr 0
 }
 
 function bbc_askpass () {
@@ -222,8 +213,10 @@ function init_help_output () {
 	then
 		# preprocess help output 
 		arguments=$( grep -o '[[0-9]]' <<< "$function_help" | wc -l )
-		function_help=$( echo -e "$function_help" | sed -e "s/\[1\]/\n[1]/g" )
-		function_help=$( echo -e "$function_help" | sed -r -e "s/(\[[0-9]\])/\n\1/g" )
+		function_help=$( echo -e "$function_help" | \
+		sed -e "s/\[1\]/\n[1]/g" )
+		function_help=$( echo -e "$function_help" | \
+		sed -r -e "s/(\[[0-9]\])/\n\1/g" )
 		# construct help output 
 		help_string="\nUsage: ${function_name}"
 		arg_string=

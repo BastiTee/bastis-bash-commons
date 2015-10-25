@@ -13,7 +13,7 @@ if [ ! -v $curr_loc ]; then
 	# .. and if successful source bash commons functions as well 
 	curr_loc=$( echo $curr_loc | sed -r -e "s/\/[^\/]+$//g" )
 	source ${curr_loc}/bbc 
-	echo "Sourcing basti"s bash commons functions done."
+	echo "Sourcing basti's bash commons functions done."
 fi
 # Locale settings  
 export LANG="en_US.UTF-8"
@@ -54,7 +54,7 @@ alias gpl="git pull -r"
 alias gpu="git push"
 alias gco="git commit"
 # ==============================================================================
-echo "Loading basti"s bash defaults done." 
+echo "Loading basti's bash defaults done." 
 # ==============================================================================
 # Show full path in babun prompt (needs to be in .babunrc manually)
 # export PS1="\[\033[00;34m\]{ \[\033[01;34m\]\w \[\033[00;34m\]}\[\033[01;32m\] $( git rev-parse --abbrev-ref HEAD 2> /dev/null || echo ) \[\033[01;31m\]» \[\033[00m\]"
