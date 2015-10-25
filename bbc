@@ -16,6 +16,54 @@ standard-in." $@ || return $?
 	sed 'N;/^\n$/d;P;D' < /dev/stdin 
 }
 
+function bbc_wd () {
+	init_help_output "$FUNCNAME" "An extension of the system's default cd \
+command with pattern-based searching of candidates before changing to the \
+candidate folder that has been found. wd means 'warp directory'.[1] Directory \
+pattern." $@ || return $?
+
+	MAX_DEPTH=3 # How deep should wd look in the folder tree for matches? 
+	MAX_HITS_BEFORE_BREAK=5 # After how many hits should wd stop searching? 
+	
+	# keep 'cd' without any options
+	if [ $# -le 0 ] || [ -v $1 ]; then cd ~; return; fi 
+	# keep 'cd -' function, but without output
+	if [ "$1" == "-" ]; then cd - &> /dev/null; return; fi 
+	# keep 'cd ..' function
+	if [ "$1" == ".." ]; then cd ..; return; fi  
+	# 'cd ...' function
+	if [ "$1" == "..." ]; then cd ..; cd ..; return; fi
+	# 'cd <folder>' if folder exists (basic cd behaviour) 
+	if [ -e $1 ] && [ -d $1 ]; then cd $1; return; fi 
+	# break on absolute paths 
+	if [[ "$1" =~ /.* ]]; then
+		echo "-bash: wd: $1: Warp on absolute paths not supported"; return
+	fi
+	# pattern-based search and changing of dirs
+	no_hits=0
+	first_hit=
+	pattern=$( echo "*${1}*" | sed -r -e "s/[\/]+/\//g" -e "s/\//*\/*/g" )
+	command="find -maxdepth $MAX_DEPTH -type d -iwholename \"$pattern\" -prune 2>/dev/null"
+	# echo "--- warping to: '${pattern}' with '${command}'"
+	for hit in $( eval $command ) 
+	do
+		if [ $no_hits == 0 ]; then first_hit=$hit; fi 
+		no_hits=$(( $no_hits + 1 ))
+		echo $hit
+		if [ $no_hits == $MAX_HITS_BEFORE_BREAK ]; then 
+			echo -e "...\n-bash: wd: $1: Too many potential hits"; break 
+		fi 
+	done
+	if [ $no_hits == 0 ]; then 
+		echo "-bash: wd: $1: No such file or directory"; return
+	elif [ $no_hits -ge 2 ]; then 
+		return
+	else 
+		cd $first_hit
+	fi 
+}
+alias wd="bbc_wd" # install bbc_wd as wd-command immediately 
+
 function bbc_get_bash_version () {
 	init_help_output "$FUNCNAME" "Returns the bash version as separated string \
 to check for compatibility." $@ || return $?
