@@ -36,7 +36,7 @@ pattern." $@ || return $?
 	# 'cd <folder>' if folder exists (basic cd behaviour) 
 	if [ -e $1 ] && [ -d $1 ]; then cd $1; return; fi 
 	# break on absolute paths 
-	if [[ "$1" =~ /.* ]]; then
+	if [[ "$1" =~ ^/.* ]]; then
 		echo "-bash: wd: $1: Warp on absolute paths not supported"; return
 	fi
 	# pattern-based search and changing of dirs
@@ -63,7 +63,6 @@ pattern." $@ || return $?
 		cd $first_hit
 	fi 
 }
-alias wd="bbc_wd" # install bbc_wd as wd-command immediately 
 
 function bbc_get_bash_version () {
 	init_help_output "$FUNCNAME" "Returns the bash version as separated string \
