@@ -25,8 +25,8 @@ pattern." $@ || return $?
 	MAX_DEPTH=3 # How deep should wd look in the folder tree for matches? 
 	MAX_HITS_BEFORE_BREAK=5 # After how many hits should wd stop searching? 
 	
-	# keep 'cd' without any options
-	if [ $# -le 0 ] || [ -v $1 ]; then cd ~; return; fi 
+	# on 'wd' without any options, don't do anything (in contrast to 'cd' )
+	if [ $# -le 0 ] || [ -v $1 ]; then return; fi 
 	# keep 'cd -' function, but without output
 	if [ "$1" == "-" ]; then cd - &> /dev/null; return; fi 
 	# keep 'cd ..' function
