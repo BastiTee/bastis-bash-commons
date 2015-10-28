@@ -15,25 +15,29 @@ declare -a COLUMN_WIDTHS
 
 function debug () {
 	return # comment to see output 
-	echo "$1"
+	echo "$@"
 }
 
 function show_help () {
 	echo -e "Auto-formats table-like data read from standard-in."
-	echo -e "\nUsage: `basename $0` [-s <FS>] [-y] [-h]\n"
+	echo -e "\nUsage: `basename $0` [-s <FS>] [-y] [-t] [-c <CS>] [-h]\n"
 	echo -e "\t-s <FS>\t\tColumn separator in input data (default: '$INPUT_COLUMN_SEPARATOR')."
 	echo -e "\t-y\t\tData has header."
 	echo -e "\t-t\t\tPrint table borders in output."
+	echo -e "\t-c\t\tUser-defined column separator."
 	echo -e "\t-h\t\tPrint this help."
-	echo -e "\nExample: cat mytabledata.txt | table -s \";\" -y\n"
+	echo -e "\nExample: cat mytabledata.txt | table -s \";\" -y \n"
 	exit 1
 }
 
 # read command line 
-while getopts "s:yth" opt; do
+while getopts "s:ythc:" opt; do
     case "$opt" in
     s)
         INPUT_COLUMN_SEPARATOR=$OPTARG
+        ;;
+	c)
+        OUT_COLUMN_SEPARATOR=$OPTARG
         ;;
 	y)  INPUT_HAS_HEADER=1
 		;;
@@ -45,6 +49,10 @@ while getopts "s:yth" opt; do
 		;;
 	esac
 done
+
+debug "insep='$INPUT_COLUMN_SEPARATOR'"
+debug "hashe='$INPUT_HAS_HEADER'"
+debug "tboar='$PRINT_TABLE_BORDERS'"
 
 if [ $PRINT_TABLE_BORDERS == 1 ]
 then
@@ -76,12 +84,8 @@ debug "col_tot=$columns"
 # get columns widths
 for it in $( seq 0 $(( ${#FILE_CONTENT[@]} - 1 )) )
 do
-	if [ "$INPUT_COLUMN_SEPARATOR" == " " ]; then
-		row_content=( ${FILE_CONTENT[$it]} )
-	else 
-		line=$( echo ${FILE_CONTENT[$it]} | tr " " "_" | tr "$INPUT_COLUMN_SEPARATOR" " " )
-		row_content=( $line )
-	fi 
+	mapfile -t row_content < <( echo ${FILE_CONTENT[$it]} | \
+	sed "s/[[:blank:]]*$/-/g" | tr "$INPUT_COLUMN_SEPARATOR" "\n" ) 
 	for yt in $( seq 0 $(( $columns - 1 )) )
 	do
 		col_wid=${#row_content[$yt]}
@@ -92,19 +96,12 @@ do
 	done 
 done
 
-debug "col_widths=${COLUMN_WIDTHS[@]}"
+debug "col_widths='${COLUMN_WIDTHS[@]}'"
 
 # generate format string 
-format_string="$lead_string$OUT_COLUMN_SEPARATOR${lead_string}"
 lead_string=
 if [ $PRINT_TABLE_BORDERS == 1 ]; then lead_string=" "; fi
-for it in $( seq 0 $(( ${#COLUMN_WIDTHS[@]} - 1 )) )
-do
-	format_string="${format_string}${lead_string}%-$(( ${COLUMN_WIDTHS[$it]} + 1 ))s$OUT_COLUMN_SEPARATOR"
-done
-format_string="${format_string}\n"
 
-debug "format_string=$format_string"
 debug "header_len=$header_len"
 debug "table_sep='$OUT_COLUMN_SEPARATOR'"
 debug "len_tsep=$LEN_OUT_COLUMN_SEPARATOR"
@@ -126,13 +123,22 @@ function print_rule () {
 print_rule "\n╔" "╗" "╦" 
 for it in $( seq 0 $(( ${#FILE_CONTENT[@]} - 1 )) )
 do
-	if [ "$INPUT_COLUMN_SEPARATOR" == " " ]; then
-		row_content=( ${FILE_CONTENT[$it]} )
-	else 
-		line=$( echo ${FILE_CONTENT[$it]} | tr " " "_" | tr "$INPUT_COLUMN_SEPARATOR" " " )
-		row_content=( $line )
-	fi 
-	printf "$format_string" ${row_content[@]}
+	if [ $PRINT_TABLE_BORDERS == 1 ]; then printf "$OUT_COLUMN_SEPARATOR"; fi
+	mapfile -t row_content < <( echo ${FILE_CONTENT[$it]} | tr "$INPUT_COLUMN_SEPARATOR" "\n" )
+	for yt in $( seq 0 $(( $columns - 1 )) )
+	do
+	
+		column=${row_content[$yt]}
+		printf "$lead_string%-$((${COLUMN_WIDTHS[$yt]} + 1 ))s" "$column"
+		if [ $yt == $(( $columns - 1 )) ]
+		then 
+			if [ $PRINT_TABLE_BORDERS == 1 ]; then printf "$OUT_COLUMN_SEPARATOR"; fi
+		else
+			printf "$OUT_COLUMN_SEPARATOR";
+		fi 
+			
+	done
+	printf "\n"
 	if [ $INPUT_HAS_HEADER == 1 ] && [ $it == 0 ]
 	then 
 		print_rule "╠" "╣" "╬"
