@@ -80,6 +80,17 @@ function write_200_OK_header () {
 	echo # IMPORTANT !
 }
 
+function write_webpage_prefix () {
+	echo "<!DOCTYPE html><html><head>"
+	if [ ! -v "$1" ]; then echo "<title>${1}</title>"; fi
+	echo "</head><body>"
+	if [ ! -v "$2" ]; then echo "<h3>${2}</h3>"; fi 
+}
+
+function write_webpage_suffix () {
+	echo "</body></html>"
+}
+
 ###############################################################################
 # MAIN SERVER LOOP
 ###############################################################################
