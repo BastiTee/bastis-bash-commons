@@ -9,8 +9,8 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
-# Include Basti's Bash Commons
-if [ ! -v $( command -v "bbc" ) ]; then source bbc; else exit; fi
+# You need to include Basti's Bash Commons
+
 # We need bash v4 or later, because we want to use arrays
 if [ $( bbc_get_bash_version | cut -b1 ) != 4 ]
 then
@@ -97,6 +97,9 @@ function write_webpage_suffix () {
 
 function start_server () {
 
+	if [ $# -le 0 ]; then echo "No server port set."; return 1; fi
+	SERVER_PORT=$1
+	
 	FIFO_PIPE_OUT=`mktemp`
 	rm -f $FIFO_PIPE_OUT
 	mkfifo $FIFO_PIPE_OUT
@@ -124,32 +127,3 @@ function start_server () {
 		)
 	done
 }
-
-###############################################################################
-# COMMAND LINE PARSING
-###############################################################################
-
-function show_help () {
-
-	echo -e "\nUsage: `basename $0` [-p <port>]\n"
-	echo -e "\t-p <port>\tServer port."
-	echo
-	exit $1
-}
-
-while getopts "hp:" opt; do
-	case "$opt" in
-	h)
-		show_help 0
-		;;
-	p)
-		SERVER_PORT=$OPTARG
-		;;
-	*)
-		show_help 1
-		;;
-	esac
-done
-if [ -v $SERVER_PORT ]; then show_help 1; fi
-
-# start_server # (for testing only)
