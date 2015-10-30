@@ -74,6 +74,12 @@ function extract_query_parameters () {
 	done
 }
 
+function write_200_OK_header () {
+	echo -e "HTTP/1.1 200 OK\r"
+	echo "Content-type: text/html"
+	echo # IMPORTANT !
+}
+
 ###############################################################################
 # MAIN SERVER LOOP
 ###############################################################################

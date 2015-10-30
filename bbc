@@ -96,9 +96,9 @@ function bbc_yesno () {
 	fi
 }
 
-function bbc_urlescape () {
-	init_help_output "$FUNCNAME" "URL-escapes the given string.[1] The \
-string to be escaped." $@ || return $?
+function bbc_urlencode () {
+	init_help_output "$FUNCNAME" "URL-enodes the given string.[1] The \
+string to be encoded." $@ || return $?
 
 	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" \
 	-e "s/\\$/%24/g" -e "s/&/%26/g" -e "s/'/%27/g" -e "s/(/%28/g" \
