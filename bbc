@@ -147,6 +147,13 @@ be used in files." $@ || return $?
 	date "+%Y%m%d-%H%M%S"
 }
 
+function bbc_epoch () {
+	init_help_output "$FUNCNAME" "Returns the current epoch timestamp." $@ || \
+return $?
+	
+	date "+%s"
+}
+
 function bbc_whereami () {
 	init_help_output "$FUNCNAME" "Returns the location of the current script.\
 [1] If '-d' then return parent dirname only."\

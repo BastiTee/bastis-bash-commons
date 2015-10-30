@@ -83,9 +83,9 @@ function start_server () {
 	FIFO_PIPE_OUT=`mktemp`
 	rm -f $FIFO_PIPE_OUT
 	mkfifo $FIFO_PIPE_OUT
-	bbc_log "Created output pipe at $FIFO_PIPE_OUT"
+	echo "Created output pipe at $FIFO_PIPE_OUT"
 	trap "rm -f $FIFO_PIPE_OUT" EXIT
-	bbc_log "Starting server on port $SERVER_PORT"
+	echo "Starting server on port $SERVER_PORT"
 
 	while true
 	do
@@ -99,9 +99,9 @@ function start_server () {
 					REQUEST=$line
 				elif [ "$line" = "" ] # empty line / end of request
 				then
-					bbc_log "Processing request with uuid '$request_uuid': $REQUEST"
+					echo "Processing request with uuid '$request_uuid': $REQUEST"
 					process_request $REQUEST > $FIFO_PIPE_OUT
-					bbc_log "Finished request processing for uuid '$request_uuid'"
+					echo "Finished request processing for uuid '$request_uuid'"
 				fi
 			done
 		)
