@@ -2,8 +2,6 @@
 # ==============================================================================
 # TIMEOUT [-SIG] time [--] command args...
 # Run the given command until completion, but kill it if it runs too long.
-#
-# timeout [-SIG] time [--] command args...
 # Specifically designed to exit immediatally (no sleep interval) and clean up
 # nicely without messages or leaving any extra processes when finished.
 #
@@ -13,7 +11,6 @@
 # Taken from https://www.ict.griffith.edu.au/anthony/software/timeout.sh
 # ==============================================================================
 
-TIMEOUT [-SIG] time [--] command args...
 PROGNAME=`type $0 | awk '{print $3}'`  # search for executable on path
 PROGDIR=`dirname $PROGNAME`            # extract directory of program
 PROGNAME=`basename $PROGNAME`          # base name of program

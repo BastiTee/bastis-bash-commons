@@ -9,7 +9,7 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
-# You need to include Basti's Bash Commons
+source bbc # source bash commons 
 
 # We need bash v4 or later, because we want to use arrays
 if [ $( bbc_get_bash_version | cut -b1 ) != 4 ]
@@ -19,16 +19,31 @@ fi
 
 declare -A qparams
 export qparams
+declare -A pparams
+export pparams
 
 ###############################################################################
 # BUSINESS LOGIC STUBS (override these to implement your own server logic)
 ###############################################################################
 
 function process_GET () {
-	echo -e "HTTP/1.1 200 OK\r"
-	echo "Content-type: text/html"
-	echo # IMPORTANT !
-	echo "GET-Request '$@' received. $( date )"
+	extract_query_parameters $@
+	extract_path_parameters $@
+	write_200_OK_header
+	write_webpage_prefix "bbc_webserver"
+	echo "<div style=\"font-family: monospace\">"
+	wecho "--- query parameters"
+	for i in "${!qparams[@]}"
+	do
+	  wecho "  $i --> ${qparams[$i]}"
+	done
+	wecho "--- path parameters"
+	for i in "${!pparams[@]}"
+	do
+	  wecho "  $i --> ${pparams[$i]}"
+	done
+	echo "</div>"
+	write_webpage_suffix
 }
 
 function process_POST () {
@@ -44,7 +59,7 @@ function process_POST () {
 
 function wecho () {
 	# Web echo
-	echo "$@<BR />"
+	echo "$@</br>"
 }
 
 function process_request () {
@@ -74,6 +89,17 @@ function extract_query_parameters () {
 	done
 }
 
+function extract_path_parameters () {
+	request=$( echo $2 | sed -r -e "s/\?.*//g" -e "s/^[\/]+//g" -e "s/\/$//g" )
+	if [ -v $request ]; then return; fi # no path params
+	idx=0
+	for param in $( echo $request | tr "/" " " )
+	do 
+		pparams[$idx]=$param
+		idx=$(( $idx + 1 ))
+	done
+}
+
 function write_200_OK_header () {
 	echo -e "HTTP/1.1 200 OK\r"
 	echo "Content-type: text/html"
@@ -95,7 +121,7 @@ function write_webpage_suffix () {
 # MAIN SERVER LOOP
 ###############################################################################
 
-function start_server () {
+function bbc_start_server () {
 
 	if [ $# -le 0 ]; then echo "No server port set."; return 1; fi
 	SERVER_PORT=$1

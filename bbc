@@ -9,6 +9,13 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
+# Make sure that commons only get sourced once 
+if [[ $_ != $0 ]] && [ ! -v $BBC_COMMONS_SOURCED ] && \
+[ $BBC_COMMONS_SOURCED == 1 ]
+then
+	return 0
+fi
+
 function bbc_remove_duplicate_empty_lines () {
 	init_help_output "$FUNCNAME" "Removes duplicate empty lines read from \
 standard-in." $@ || return $?
@@ -246,4 +253,10 @@ function init_manual () {
 }
 
 # if called directly, print all help sections 
-[[ $_ != $0 ]] && return 0 || init_manual
+if [[ $_ != $0 ]]
+then
+	export BBC_COMMONS_SOURCED=1 # publish that this was sourced already 
+	return 0 
+else
+	init_manual
+fi
