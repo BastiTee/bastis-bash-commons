@@ -110,6 +110,17 @@ function write_200_OK_header () {
 	echo # IMPORTANT !
 }
 
+function write_error_page () {
+	[ -v "$1" ] && CODE=500 || CODE=$1
+	[ -v "$2" ] && MESSAGE="Internal server error" || MESSAGE="$2"
+	echo -e "HTTP/1.1 ${CODE}\r"
+	echo "Content-type: text/html"
+	echo # IMPORTANT !
+	write_webpage_prefix "Error ${CODE}" "Error ${CODE}" "monospace"
+	wecho "$MESSAGE"
+	write_webpage_suffix
+}
+
 function write_webpage_prefix () {
 	# You can optionally provide:
 	# $1 - Webpage title 
