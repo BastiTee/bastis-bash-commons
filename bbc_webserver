@@ -9,13 +9,10 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
-source bbc # source bash commons 
-
 # We need bash v4 or later, because we want to use arrays
-if [ $( bbc_get_bash_version | cut -b1 ) != 4 ]
-then
-	echo "Bash v4 is necessary"; exit 1
-fi
+if [ $( bash --version | head -n1 | awk -F"." '{print $1}' | \
+awk '{print $4}' ) != 4 ]
+then echo "Bash v4 is necessary"; exit 1; fi
 
 declare -A qparams
 export qparams
@@ -107,8 +104,13 @@ function write_200_OK_header () {
 }
 
 function write_webpage_prefix () {
+	# You can optionally provide:
+	# $1 - Webpage title 
+	# $2 - Headline label 
+	# $3 - Global font family 
 	echo "<!DOCTYPE html><html><head>"
 	if [ ! -v "$1" ]; then echo "<title>${1}</title>"; fi
+	if [ ! -v "$3" ]; then echo "<style>* { font-family: ${3}; }</style>"; fi
 	echo "</head><body>"
 	if [ ! -v "$2" ]; then echo "<h3>${2}</h3>"; fi 
 }

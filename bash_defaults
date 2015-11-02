@@ -57,7 +57,7 @@ alias gpl="git pull -r"
 alias gpu="git push"
 alias gco="git commit"
 # Aliases for quickly accessing commons functions 
-alias wd="bbc_wd" 
+alias cd="bbc_wd" 
 alias table="bbc_table" 
 alias timeout="bbc_timeout"
 alias fakename="bbc_fakename"
