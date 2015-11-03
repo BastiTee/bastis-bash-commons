@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# FLIPBOOK-GENERATOR
+# FLIPBOOK-GENERATOR (BASTI's BASH COMMONS)
 # Create neat little flipbook slideshows from your image folders.  
 #
 # Providing an image folder with images having the same basic dimensions (i.e., 

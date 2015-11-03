@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==============================================================================
-# NOTEBOOK
+# NOTEBOOK (BASTI's BASH COMMONS)
 # A tool to simply pipe bash output mdf-compatible to a previously defined 
 # bash notebook.
 # Usage: <any command on the command line> | note <optional note> 
