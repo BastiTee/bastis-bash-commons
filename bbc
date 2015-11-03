@@ -26,7 +26,7 @@ pattern." $@ || return $?
 	MAX_HITS_BEFORE_BREAK=5 # After how many hits should wd stop searching? 
 	
 	# on 'wd' without any options, don't do anything (in contrast to 'cd' )
-	if [ $# -le 0 ] || [ -v $1 ]; then return; fi 
+	if [ $# -le 0 ] || [ -v "$1" ]; then return; fi 
 	# keep 'cd -' function, but without output
 	if [ "$1" == "-" ]; then cd - &> /dev/null; return; fi 
 	# keep 'cd ..' function
@@ -34,11 +34,9 @@ pattern." $@ || return $?
 	# 'cd ...' function
 	if [ "$1" == "..." ]; then cd ..; cd ..; return; fi
 	# 'cd <folder>' if folder exists (basic cd behaviour) 
-	if [ -e $1 ] && [ -d $1 ]; then cd $1; return; fi 
-	# break on absolute paths 
-	if [[ "$1" =~ ^/.* ]]; then
-		echo "-bash: wd: $1: Warp on absolute paths not supported"; return
-	fi
+	if [ -e "$1" ] && [ -d "$1" ]; then cd "$1"; return; fi 
+	# on absolute paths just do a normal cd 
+	if [[ "$1" =~ ^/.* ]]; then cd "$1"; return; fi
 	# pattern-based search and changing of dirs
 	no_hits=0
 	first_hit=
