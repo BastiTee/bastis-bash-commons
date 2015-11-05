@@ -1,0 +1,38 @@
+#!/bin/bash
+# ==============================================================================
+# JCLOC (BASTI's BASH COMMONS)
+# A little wrapper around the cloc project for more convenience.
+# For 'cloc' refer to https://github.com/AlDanial/cloc/  
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+CLOC_GITHUB="https://raw.githubusercontent.com/AlDanial/cloc/master/cloc"
+
+function help () {
+	[ ! -v "$1" ] && echo "$1"
+	echo -e "Recursively searching for java files and counting lines of code." 
+	echo -e "\n\tUSAGE: $( basename $0 ) [dir]"
+	echo -e "\t[dir]\t\tRoot dir of java source files." 
+	echo ""
+	exit 1
+}
+
+# check for perl 
+[ -v $( command -v perl ) ] && help "Perl is not installed."
+# check for cloc and download if not available
+[ -v $( command -v cloc ) ] && curl -o cloc "$CLOC_GITHUB"
+# check input arguments 
+[ $# != 1 ] && help "Too few arguments."
+[ ! -e "$1" ] && help "Directory does not exist."
+[ ! -d "$1" ] && help "Input is not a directory."
+
+# create list of files 
+tmpf=$( mktemp )
+find "$1" -type f -iname "*.java" > $tmpf 
+
+cloc --quiet --list-file=${tmpf} | grep -v "github"
+echo "" 
+
+# cleanup 
+rm -f $tmpf
