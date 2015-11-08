@@ -21,7 +21,10 @@ function help () {
 # check for perl 
 [ -v $( command -v perl ) ] && help "Perl is not installed."
 # check for cloc and download if not available
-[ -v $( command -v cloc ) ] && curl -o cloc "$CLOC_GITHUB"
+if [ -v $( command -v cloc ) ] && [ -v $( command -v ./cloc ) ]; then
+	echo "Downloading cloc perl script.. "
+	curl -s -o cloc "$CLOC_GITHUB"
+fi
 # check input arguments 
 [ $# != 1 ] && help "Too few arguments."
 [ ! -e "$1" ] && help "Directory does not exist."
@@ -30,8 +33,9 @@ function help () {
 # create list of files 
 tmpf=$( mktemp )
 find "$1" -type f -iname "*.java" > $tmpf 
-
-cloc --quiet --list-file=${tmpf} | grep -v "github"
+#command="cloc --quiet --list-file=${tmpf} | grep -v \"github\""
+echo Running $command
+eval command
 echo "" 
 
 # cleanup 
