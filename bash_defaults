@@ -51,11 +51,6 @@ alias ll="ls -lA" # long list
 alias l="ll"								
 alias ..="cd .."
 alias ...="cd ../../"
-# Alias settings for git 
-alias gs="git status" 
-alias gpl="git pull -r"
-alias gpu="git push"
-alias gco="git commit"
 # Aliases for quickly accessing commons functions 
 alias wd="bbc_wd" # replaceing cd with warp dir
 alias table="bbc_table" 
