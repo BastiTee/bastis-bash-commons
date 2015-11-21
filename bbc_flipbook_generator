@@ -34,7 +34,7 @@ STILL_FRAMES_PER_IMAGE=
 BLEND_FRAMES_PER_IMAGE=
 VIDEO_FPS=
 TARGET_RESIZE=
-DEFAULT_CONFIG_STRING="7,5,35,0.5"
+DEFAULT_CONFIG_STRING=""11,6,35,0.5"
 
 function show_help () {
 	# Prints out information to the script user
