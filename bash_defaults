@@ -52,7 +52,7 @@ alias l="ll"
 alias ..="cd .."
 alias ...="cd ../../"
 # Aliases for quickly accessing commons functions 
-alias wd="bbc_wd" # replaceing cd with warp dir
+alias cd="bbc_wd"
 alias table="bbc_table" 
 alias timeout="bbc_timeout"
 alias fakename="bbc_fakename"

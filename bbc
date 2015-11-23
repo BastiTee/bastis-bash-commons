@@ -25,25 +25,28 @@ pattern." $@ || return $?
 	MAX_DEPTH=3 # How deep should wd look in the folder tree for matches? 
 	MAX_HITS_BEFORE_BREAK=5 # After how many hits should wd stop searching? 
 	
+	# important: use builtin cd in scenarios where cd is aliased to bbc_wd !!
+	
 	# on 'wd' without any options, don't do anything (in contrast to 'cd' )
 	if [ $# -le 0 ] || [ -v "$1" ]; then return; fi 
 	# keep 'cd -' function, but without output
-	if [ "$1" == "-" ]; then cd - &> /dev/null; return; fi 
+	if [ "$1" == "-" ]; then builtin cd - &> /dev/null; return; fi 
 	# keep 'cd ..' function
-	if [ "$1" == ".." ]; then cd ..; return; fi  
+	if [ "$1" == ".." ]; then builtin cd ..; return; fi  
 	# 'cd ...' function
-	if [ "$1" == "..." ]; then cd ..; cd ..; return; fi
+	if [ "$1" == "..." ]; then builtin cd ..; builtin cd ..; return; fi
 	# 'cd <folder>' if folder exists (basic cd behaviour) 
-	if [ -e "$1" ] && [ -d "$1" ]; then cd "$1"; return; fi 
+	if [ -e "$1" ] && [ -d "$1" ]; then builtin cd "$1"; return; fi 
 	# on absolute paths just do a normal cd 
-	if [[ "$1" =~ ^/.* ]]; then cd "$1"; return; fi
+	if [[ "$1" =~ ^/.* ]]; then builtin cd "$1"; return; fi
 	# pattern-based search and changing of dirs
 	no_hits=0
 	first_hit=
 	pattern=$( echo "*${1}*" | sed -r -e "s/[\/]+/\//g" -e "s/\//*\/*/g" )
-	command="find -maxdepth $MAX_DEPTH -type d -iwholename \"$pattern\" \
--prune 2>/dev/null"
-	# echo "--- warping to: '${pattern}' with '${command}'"
+	# core command: all dirs, no hidden dirs 
+	command="find -maxdepth $MAX_DEPTH -type d \( -iwholename \"$pattern\" ! \
+	-iwholename \"*\/.*\" \) -prune 2> /dev/null"	
+	#echo "--- warping to: '${pattern}' with '${command}'"
 	for hit in $( eval $command ) 
 	do
 		if [ $no_hits == 0 ]; then first_hit=$hit; fi 
@@ -58,7 +61,7 @@ pattern." $@ || return $?
 	elif [ $no_hits -ge 2 ]; then 
 		return
 	else 
-		cd $first_hit
+		builtin cd $first_hit
 	fi 
 }
 
