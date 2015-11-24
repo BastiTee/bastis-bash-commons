@@ -56,6 +56,7 @@ alias cd="bbc_wd"
 alias table="bbc_table" 
 alias timeout="bbc_timeout"
 alias fakename="bbc_fakename"
+alias bugs="bbc_bugzilla_cli"
 alias note="bbc_note"
 # ==============================================================================
 echo "Loading basti's bash defaults done." 

@@ -1,0 +1,314 @@
+#!/bin/bash
+# ==============================================================================
+# BUGZILLA COMMANDLINE INTERFACE (BASTI's BASH COMMONS)
+# A cmd-line frontend for bugzilla. 
+# ATTENTION: This has only been tested with Bugzilla 3.4.4.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+[ -z $BUGZILLA_URL ] && { echo "Global variable BUGZILLA_URL pointing to your \
+bugzilla instance (e.g. https://bugs.mycompany.com ) is not set."; exit 1; }
+
+# only if set to '1' the cli will clear on screen changes
+ENABLE_CLEARS=1
+# Base URL for search lookup 
+BASE_URL="${BUGZILLA_URL}/buglist.cgi?\
+order=bug_status%2Cbug_id%20DESC&ctype=csv&bug_status=NEW&bug_status=ASSIGNED&"
+# Base URL of bug detail pages 
+BUG_BASE_URL="${BUGZILLA_URL}/show_bug.cgi?id="
+# parameter suffix to display more bug states 
+BUG_STATE_EXTEN="bug_status=REOPENED&bug_status=RESOLVED&"
+BUG_STATE_ALL="bug_status=UNCONFIRMED&bug_status=VERIFIED&bug_status=CLOSED&"
+# Default bbc_table command
+CTABLE="bbc_table"
+# Default limit for search results 
+LIMIT=20
+# Array that holds all temporary files 
+declare -a TEMP_FILES
+
+#===============================================================================
+
+function red () {
+	echo `tput setaf 1`"$1"`tput sgr0`
+}
+
+function blue () {
+	echo `tput setaf 4`"$1"`tput sgr0`
+}
+
+function clear_display () {
+	if [ $ENABLE_CLEARS == 1 ]; then
+		clear
+		blue ":: BUGZILLA CLI ::"
+	fi
+}
+
+function load_prerequisites () {
+
+	# check for bbc_table and if necessary load from github
+	CTABLE="bbc_table"
+	prereq=$( command -v $CTABLE )
+	if [ -z $prereq ]; then
+		curl -s -o bbc_table "https://raw.githubusercontent.com/BastiTee/bastis-bash-commons/master/bbc_table"
+		CTABLE="./bbc_table"
+	fi
+
+	# search for browser 
+	BROWSER=$( find_browser )
+	[ -z "$BROWSER" ] && { echo "No browser found!"; show_help;}
+
+	# create temporary files 
+	for i in $( seq 0 5 )
+	do 	
+		TEMP_FILES[$i]=$( mktemp --suffix=_bugzilla_cli )
+	done
+	
+	first_pass=1 # to avoid error message on first "empty command" 
+	in_bug_view=0 # toggle to save current view 
+	last_bugid= # last bug view that was opened 
+	cmd_line= # last command line 
+	
+	create_help
+}
+
+function create_help () {
+	echo -e "\nTABLE VIEW:\n" >> ${TEMP_FILES[5]}
+	echo -e " $( red s ) OPTS.. - Start search with options or default parameters.\n" >> ${TEMP_FILES[5]}
+	echo -e " Options:\n" >> ${TEMP_FILES[5]}
+	echo -e " $( red /u )<USER>  - Search by user" >> ${TEMP_FILES[5]}
+	echo -e " $( red /q )<QUERY> - Search by query" >> ${TEMP_FILES[5]}
+	echo -e " $( red /l )<LIMIT> - Limit results" >> ${TEMP_FILES[5]}
+	echo -e " $( red /e )        - Extend bug stats with REOPENED & RESOLVED" >> ${TEMP_FILES[5]}
+	echo -e " $( red /a )        - Extend bug states with /e and UNCONFIRMED, VERIFIED & CLOSED" >> ${TEMP_FILES[5]}
+	echo -e "" >> ${TEMP_FILES[5]}
+	echo -e " Example: $( red s ) $( red /u)john.doe $( red /q)DATEV $( red /l)10 $( red /a)" >> ${TEMP_FILES[5]}
+	echo -e "\nBUG DETAILS VIEW:\n" >> ${TEMP_FILES[5]}
+	echo -e " $( red o )        - Open bug in browser." >> ${TEMP_FILES[5]}
+	echo -e " $( red r )        - Return to table view." >> ${TEMP_FILES[5]}
+	echo -e "\nGENERAL:\n" >> ${TEMP_FILES[5]}
+	echo -e " $( red " h" )        - Print this help." >> ${TEMP_FILES[5]}
+	echo -e " $( red "[t] >> ")   - Indicating your in table view." >> ${TEMP_FILES[5]}
+	echo -e " $( red "[b] >> ")   - Indicating your in bug details view." >> ${TEMP_FILES[5]}
+	echo -e "" >> ${TEMP_FILES[5]}
+}
+
+function urlencode () {
+	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" \
+	-e "s/\\$/%24/g" -e "s/&/%26/g" -e "s/'/%27/g" -e "s/(/%28/g" \
+	-e "s/)/%29/g" -e "s/*/%2A/g" -e "s/+/%2B/g" -e "s/,/%2C/g" \
+	-e "s/\//%2F/g" -e "s/:/%3A/g" -e "s/;/%3B/g" -e "s/=/%3D/g" \
+	-e "s/?/%3F/g" -e "s/@/%40/g" -e "s/\[/%5B/g" -e "s/\]/%5D/g" \
+	-e "s/ /%20/g" 
+}
+
+function find_browser () {
+	
+	candidates="/cygdrive/c/Program*Files*/Google/Chrome/Application/chrome.exe /cygdrive/c/Program*Files*/Internet*Explorer/iexplore.exe /cygdrive/c/Program*Files*/Mozilla*Firefox/firefox.exe"
+	for cand in $candidates
+	do 
+		if [ -e "$cand" ]; then
+			echo "$cand"
+			return
+		fi
+	done
+	echo ""
+}
+
+function open_browser () {
+	[ -z $1 ] && return
+	target="${BUG_BASE_URL}$1"
+	if [[ "$BROSER" =~ .*[cC]hrome.* ]]; then
+		"$BROWSER" /new-tab $target 2>/dev/null
+	else 
+		"$BROWSER" $target
+	fi
+}
+
+function load_table () {
+	curl -k 2>/dev/null "$1" >> ${TEMP_FILES[0]}
+
+	tail -n +2 "${TEMP_FILES[0]}" | sed -e "s/,\"/,/g" -e "s/\",/,/g" -e "s/^\"//g" -e "s/\"$//g" \
+	| awk -F',' -v red=`tput setaf 1` -v res=`tput sgr0` \
+	-v blue=`tput setaf 4` '{print red$1res","blue""substr($6,1,3)","substr($7,1,3)","substr($5,1,10)res","substr($8,1,80)}' \
+	>> ${TEMP_FILES[1]}
+
+	cat ${TEMP_FILES[1]} | grep -v -e "bug_id" | $CTABLE -s "," -c "| " > ${TEMP_FILES[2]}
+}
+
+function load_bug () {
+	echo "" > ${TEMP_FILES[3]}
+	echo "" > ${TEMP_FILES[4]}
+	curl -k 2>/dev/null ${BUG_BASE_URL}${1}"&ctype=xml" \
+	| grep -v -e "^[[:space:]]*$" -e "long_desc" -e "<bug_when" \
+	-e "<who name" -e "<cf_" -e "<delta_ts" -e "<classification" \
+	-e "accessible>" -e "<target_" -e "<everconf" -e "<cc" \
+	-e "<qa_contact" | tr "\n" "~" \
+	| sed -r -e "s/.*<bug>//g" -e "s/<attachment.*//g" \
+	-e "s/<\/bug>.*//g" -e "s/<thetext>https:[^<]+<\/thetext>//g" \
+	| tr "~" "\n" | grep -v -e "^[[:space:]]*$" |\
+	sed -e "s/<\/.*//g" -e "s/^[[:space:]]*<//g" \
+	-e "s/&lt;/</g" -e "s/&gt;/>/g" -e "s/&quot;/\"/g" \
+	> ${TEMP_FILES[3]}
+	echo "" >> ${TEMP_FILES[3]}
+	
+	has_error=$( cat ${TEMP_FILES[3]} | grep "bug error=\"NotFound\"" )
+	[ ! -z "$has_error" ] && \
+	{ echo "`tput setaf 1`No such bug!`tput sgr0`"; return; }
+	
+	cat ${TEMP_FILES[3]} | tr "\n" "~" | sed -r -e "s/~thetext.*//g" \
+	-e "s/ [^>~]+>/>/g" | tr "~" "\n" |
+	sed -r -e "s/^([^>]+)>/`tput setaf 1`\1`tput sgr0`>/g" -e "s/>/;/g" \
+	| $CTABLE -s ";" -c "| "
+	cat ${TEMP_FILES[3]} | tr "\n" "~" | sed -r -e "s/.*thetext>//g" \
+	-e "s/\+\+\+ This bug was.*//g" | tr "~" "\n" \
+	| grep -i -v -e "Created an attachment" -e "Screenshot"	
+}
+
+function cleanup () {
+	for i in $( seq 0 $(( ${#TEMP_FILES[@]} -1 )) )
+	do
+		rm -f ${TEMP_FILES[$i]}
+	done
+	exit 
+}
+
+function reset_tempfiles () {
+	for i in $( seq 0 $(( ${#TEMP_FILES[@]} -2 )) )
+	do
+		echo "" > ${TEMP_FILES[$i]}
+	done
+}
+
+function get_input_url () {
+	input_url=${BASE_URL}
+	in_limit=$LIMIT
+	ext_bugs=0
+	all_bugs=0
+	for par in $1
+	do
+		[[ "$par" =~ /l.* ]] && { in_limit=$( echo "$par" | sed -e "s/\/l[ ]*//g" ); }
+		[[ "$par" =~ /e ]] && { ext_bugs=1; }
+		[[ "$par" =~ /a ]] && { all_bugs=1; ext_bugs=1; }
+		[[ "$par" =~ /u.* ]] && { bug_user=$( echo "$par" | sed -e "s/\/u[ ]*//g" ); }
+		[[ "$par" =~ /q.* ]] && { bug_query=$( echo "$par" | sed -e "s/\/q[ ]*//g" ); }
+	done
+
+	if [ $ext_bugs == 1 ]; then input_url="${input_url}${BUG_STATE_EXTEN}"; fi
+	if [ $all_bugs == 1 ]; then input_url="${input_url}${BUG_STATE_ALL}"; fi
+	input_url="${input_url}limit=$in_limit"
+	
+	if [ ! -z $bug_user ]; then
+		input_url="${input_url}&\
+email1=${bug_user}&\
+emailtype1=substring&\
+emailassigned_to1=1&\
+emailcc1=1&\
+emailreporter1=1"
+	fi 
+	if [ ! -z $bug_query ]; then
+		input_url="${input_url}&\
+query_format=advanced&\
+short_desc=${bug_query}&\
+short_desc_type=allwordssubstr&\
+query_based_on="
+	fi
+
+	echo $input_url
+}
+
+function display_help () {
+	[ ! -z "$1" ] && echo -ne "$( red "$1")\n"
+}
+
+function format_input () {
+	return # for debug only 
+	[ -z "$1" ] && return
+	echo ""
+	echo -ne "$1" | sed -e "s/[^\?]*?//g" -e "s/&/\n/g" | $CTABLE -s "=" -c "| " 
+}
+
+#===============================================================================
+
+trap cleanup EXIT SIGTERM # send the cleaning brigade afterwards 
+load_prerequisites # setup environment 
+
+# check if something was passed on cmd
+[ ! -z "$1" ] && cmd_line="$1" || clear_display 
+
+while true
+do
+	if [ -z "$cmd_line" ] && [ $first_pass != 1 ]; then
+		display_help "Nothing selected!"
+	elif  [ -z "$cmd_line" ] && [ $first_pass == 1 ]; then
+		first_pass=0
+		echo ""
+	else 
+		#=======================================================================
+		# in bug view (o) was entered 
+		if [ $in_bug_view == 1 ] && [ "$cmd_line" == "o" ]; then
+			open_browser $last_bugid
+			clear_display
+			cat ${TEMP_FILES[4]}
+		# not in bug view (o) was entered 
+		elif [ $in_bug_view == 0 ] && [ "$cmd_line" == "o" ]; then
+			clear_display
+			cat ${TEMP_FILES[2]} # prints the current table 
+			display_help "You are not in bug view!"
+		#=======================================================================
+		# in bug view (r) was entered 
+		elif [ $in_bug_view == 1 ] && [ "$cmd_line" == "r" ]; then
+			clear_display
+			cat ${TEMP_FILES[2]} # prints the current table
+			in_bug_view=0
+		# not in bug view (r) was entered 
+		elif [ $in_bug_view == 0 ] && [ "$cmd_line" == "r" ]; then
+			clear_display
+			cat ${TEMP_FILES[2]} # prints the current table 
+			display_help "You are not in bug view!"
+		#=======================================================================
+		# in table view a bug id was entered 
+		elif [ $in_bug_view == 0 ] && [[ "$cmd_line" =~ ^[0-9]+$ ]]; then
+			clear_display
+			display_help "Loading bug details... "
+			load_bug $cmd_line > ${TEMP_FILES[4]}			
+			clear_display
+			cat ${TEMP_FILES[4]} # prints the current bug 
+			last_bugid=$cmd_line
+			in_bug_view=1
+		# not in table view a bug id was entered 
+		elif [ $in_bug_view == 1 ] && [[ "$cmd_line" =~ ^[0-9]+$ ]]; then
+			clear_display
+			cat ${TEMP_FILES[4]} # prints the current bug
+			display_help "You are not in table view!"
+		#=======================================================================	
+		# in table view a search was invoked
+		elif [ $in_bug_view == 0 ] && [[ "$cmd_line" =~ ^s ]]; then
+			input_url=$( get_input_url "$cmd_line" ) # TODO 
+			reset_tempfiles
+			clear_display
+			display_help "Loading bug table..."
+			format_input ${input_url}
+			load_table "$input_url"
+			clear_display
+			cat ${TEMP_FILES[2]} # prints the current table 
+		# not in table view a search was invoked
+		elif [ $in_bug_view == 1 ] && [[ "$cmd_line" =~ ^s ]]; then
+			clear_display
+			cat ${TEMP_FILES[4]} # prints the current bug
+			display_help "You are not in table view!"	
+		#=======================================================================
+		elif [ $cmd_line == "h" ]; then
+			clear_display
+			cat ${TEMP_FILES[5]}
+		else
+			display_help "Unknown command. Enter 'h' for help."
+		fi
+	fi
+	
+	[ $in_bug_view == 1 ] && view="[b]" || view="[t]"
+	# enables input reading including command history 
+	read -r -e -d $'\n' -p "$view >> " cmd_line
+	history -s "$cmd_line"
+	
+done
