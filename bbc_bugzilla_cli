@@ -100,8 +100,6 @@ function create_help () {
 	echo -e " $( red r )        - Return to table view." >> ${TEMP_FILES[5]}
 	echo -e "\nGENERAL:\n" >> ${TEMP_FILES[5]}
 	echo -e " $( red " h" )        - Print this help." >> ${TEMP_FILES[5]}
-	echo -e " $( red "[t] >> ")   - Indicating your in table view." >> ${TEMP_FILES[5]}
-	echo -e " $( red "[b] >> ")   - Indicating your in bug details view." >> ${TEMP_FILES[5]}
 	echo -e "" >> ${TEMP_FILES[5]}
 }
 
@@ -153,20 +151,23 @@ function load_table () {
 	-v blue=$blue '{print red$1res","blue""substr($6,1,3)","substr($7,1,3)","substr($5,1,10)res","substr($8,1,80)}' \
 	>> ${TEMP_FILES[1]} 
 
+	# format table 
 	cat ${TEMP_FILES[1]} | grep -v -e "bug_id" | $CTABLE -s "," -c "| " > ${TEMP_FILES[2]}
+	
 }
 
 function load_bug () {
+	width=110
 	echo "" > ${TEMP_FILES[3]}
 	echo "" > ${TEMP_FILES[4]}
-	curl -k 2>/dev/null ${BUG_BASE_URL}${1}"&ctype=xml" \
-	| grep -v -e "^[[:space:]]*$" -e "long_desc" -e "<bug_when" \
+	curl -k 2>/dev/null ${BUG_BASE_URL}${1}"&ctype=xml" |\
+	grep -v -e "^[[:space:]]*$" -e "long_desc" -e "<bug_when" \
 	-e "<who name" -e "<cf_" -e "<delta_ts" -e "<classification" \
 	-e "accessible>" -e "<target_" -e "<everconf" -e "<cc" \
-	-e "<qa_contact" | tr "\n" "~" \
-	| sed -r -e "s/.*<bug>//g" -e "s/<attachment.*//g" \
-	-e "s/<\/bug>.*//g" -e "s/<thetext>https:[^<]+<\/thetext>//g" \
-	| tr "~" "\n" | grep -v -e "^[[:space:]]*$" |\
+	-e "<qa_contact" | tr "\n" "~" |\
+	sed -r -e "s/.*<bug>//g" -e "s/<attachment.*//g" \
+	-e "s/<\/bug>.*//g" -e "s/<thetext>https:[^<]+<\/thetext>//g" |\
+	tr "~" "\n" | grep -v -e "^[[:space:]]*$" |\
 	sed -e "s/<\/.*//g" -e "s/^[[:space:]]*<//g" \
 	-e "s/&lt;/</g" -e "s/&gt;/>/g" -e "s/&quot;/\"/g" \
 	> ${TEMP_FILES[3]}
@@ -179,10 +180,11 @@ function load_bug () {
 	cat ${TEMP_FILES[3]} | tr "\n" "~" | sed -r -e "s/~thetext.*//g" \
 	-e "s/ [^>~]+>/>/g" | tr "~" "\n" |
 	sed -r -e "s/^([^>]+)>/`tput setaf 1`\1`tput sgr0`>/g" -e "s/>/;/g" \
-	| $CTABLE -s ";" -c "| "
+	| cut -c 1-$width | $CTABLE -s ";" -c "| "
 	cat ${TEMP_FILES[3]} | tr "\n" "~" | sed -r -e "s/.*thetext>//g" \
 	-e "s/\+\+\+ This bug was.*//g" | tr "~" "\n" \
-	| grep -i -v -e "Created an attachment" -e "Screenshot"	
+	| grep -i -v -e "Created an attachment" -e "Screenshot"	|\
+	fold -s -w $width
 }
 
 function cleanup () {
@@ -242,10 +244,11 @@ function display_help () {
 }
 
 function format_input () {
-	return # for debug only 
+	return
 	[ -z "$1" ] && return
 	echo ""
-	echo -ne "$1" | sed -e "s/[^\?]*?//g" -e "s/&/\n/g" | $CTABLE -s "=" -c "| " 
+	echo -ne "$1" | sed -e "s/[^\?]*?//g" -e "s/&/\n/g" -e "s/$/\n/g" |\
+	$CTABLE -s "=" -c "| " 
 }
 
 #===============================================================================
@@ -254,7 +257,7 @@ trap cleanup EXIT SIGTERM # send the cleaning brigade afterwards
 load_prerequisites # setup environment 
 
 # check if something was passed on cmd
-[ ! -z "$1" ] && { cmd_line="$1"; first_pass=0; } || clear_display 
+[ ! -z "$1" ] && { cmd_line="$@"; first_pass=0; } || clear_display 
 
 while true
 do
@@ -262,7 +265,6 @@ do
 		display_help "Nothing selected!"
 	elif  [ -z "$cmd_line" ] && [ $first_pass == 1 ]; then
 		first_pass=0
-		echo ""
 	else 
 		#=======================================================================
 		# in bug view (o) was entered 
@@ -272,8 +274,6 @@ do
 			cat ${TEMP_FILES[4]}
 		# not in bug view (o) was entered 
 		elif [ $in_bug_view == 0 ] && [ "$cmd_line" == "o" ]; then
-			clear_display
-			cat ${TEMP_FILES[2]} # prints the current table 
 			display_help "You are not in bug view!"
 		#=======================================================================
 		# in bug view (r) was entered 
@@ -283,8 +283,6 @@ do
 			in_bug_view=0
 		# not in bug view (r) was entered 
 		elif [ $in_bug_view == 0 ] && [ "$cmd_line" == "r" ]; then
-			clear_display
-			cat ${TEMP_FILES[2]} # prints the current table 
 			display_help "You are not in bug view!"
 		#=======================================================================
 		# in table view a bug id was entered 
@@ -299,16 +297,16 @@ do
 		#=======================================================================	
 		# in table view a search was invoked
 		elif [[ "$cmd_line" =~ ^s ]]; then
-			input_url=$( get_input_url "$cmd_line" ) # TODO 
+			input_url=$( get_input_url "$cmd_line" )
 			reset_tempfiles
-			clear_display
 			display_help "Loading bug table..."
-			format_input ${input_url}
+			format_input "${input_url}"
 			load_table "$input_url"
+			sleep 10
 			clear_display
 			cat ${TEMP_FILES[2]} # prints the current table 
 		#=======================================================================
-		elif [ $cmd_line == "h" ]; then
+		elif [ "$cmd_line" == "h" ]; then
 			clear_display
 			cat ${TEMP_FILES[5]}
 		else
@@ -316,10 +314,9 @@ do
 		fi
 	fi
 	
-	[ $in_bug_view == 1 ] && view="[b]" || view="[t]"
 	# enables input reading including command history
 	cmd_line=
-	while [ -z $cmd_line ]; do read -r -e -d $'\n' -p "$view >> " cmd_line; done
+	while [ -z "$cmd_line" ]; do read -r -e -d $'\n' -p ":: " cmd_line; done
 	history -s "$cmd_line"
 	
 done
