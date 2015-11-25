@@ -21,7 +21,8 @@ cd $( readlink -f $( dirname $0 ))
 ENABLE_CLEARS=1
 # Base URL for search lookup 
 BASE_URL="${bz_url}/buglist.cgi?\
-order=bug_status%2Cbug_id%20DESC&ctype=csv&bug_status=NEW&bug_status=ASSIGNED&"
+order=bug_id%20DESC&ctype=csv&bug_status=NEW&bug_status=ASSIGNED\
+&query_format=advanced&query_based_on=&"
 # Base URL of bug detail pages 
 BUG_BASE_URL="${bz_url}/show_bug.cgi?id="
 # parameter suffix to display more bug states 
@@ -261,10 +262,8 @@ emailcc1=1"
 	fi 
 	if [ ! -z $bug_query ]; then
 		input_url="${input_url}&\
-query_format=advanced&\
 short_desc=${bug_query}&\
-short_desc_type=allwordssubstr&\
-query_based_on="
+short_desc_type=allwordssubstr"
 	fi
 
 	echo $input_url
@@ -274,12 +273,15 @@ function display_help () {
 	[ ! -z "$1" ] && echo -ne "$( red "$1")\n"
 }
 
-function format_input () {
+function debug_input () {
 	return # remove to see debug view 
 	[ -z "$1" ] && return
 	echo ""
 	echo -ne "$1" | sed -e "s/[^\?]*?//g" -e "s/&/\n/g" -e "s/$/\n/g" |\
 	$CTABLE -s "=" -c "| " 
+	echo -e "\n$( blue "$1" )"
+	echo -e "\n<Press any key>"
+	read
 }
 
 function main () {
@@ -331,7 +333,7 @@ function main () {
 				input_url=$( get_input_url "$cmd_line" )
 				reset_tempfiles
 				display_help "Loading bug table..."
-				format_input "${input_url}"
+				debug_input "${input_url}"
 				load_table "$input_url"
 				clear_display
 				cat ${TEMP_FILES[2]} # prints the current table 
@@ -361,5 +363,5 @@ function main () {
 	done
 }
 
-main
+main "$@"
 
