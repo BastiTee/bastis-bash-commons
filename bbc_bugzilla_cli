@@ -12,8 +12,6 @@ bugzilla instance is not set. Run 'export \
 BUGZILLA_URL=https://bugs.mycompany.com'."; exit 1; }
 # remove possible path character on end of BUGZILLA_URL
 bz_url=$( sed -r -e "s/\/+$//g" <<< $BUGZILLA_URL )
-# go to scriptpath
-cd $( readlink -f $( dirname $0 ))
 
 # ==============================================================================
 
@@ -32,6 +30,8 @@ BUG_STATE_ALL="bug_status=UNCONFIRMED&bug_status=VERIFIED&bug_status=CLOSED&"
 CTABLE="bbc_table"
 # Default limit for search results 
 LIMIT=20
+# Default presets file 
+PRESET_FILE=".bugzillaclirc"
 # Array that holds all temporary files 
 declare -a TEMP_FILES
 # Source file of bbc_table
@@ -72,6 +72,16 @@ function clear_display () {
 
 function load_prerequisites () {
 
+	# go to scriptpath
+	cd $( readlink -f $( dirname $0 ))
+
+	# load optional presets 
+	if [ -e ~/$PRESET_FILE ]; then
+		while read preset; do
+			[ ! -z "$preset" ] && history -s "$preset" 
+		done < ~/$PRESET_FILE
+	fi
+	
 	# check for bbc_table and if necessary load from github
 	CTABLE="bbc_table"
 	prereq=$( command -v $CTABLE )
@@ -99,26 +109,32 @@ function load_prerequisites () {
 }
 
 function create_help () {
-echo -e "\nTABLE VIEW:\n"
+echo -e "\n$( blue "TABLE VIEW:" )\n"
 echo -e " $( red o )<BUGID> - Open bug with id <BUGID> in browser."
-echo -e " $( red s ) OPTS.. - Start search with options or default \
-parameters.\n"
+echo -e " $( red s ) OPTS.. - Start search with options or"
+echo -e "            default parameters.\n"
 echo -e "   Options:\n"
 echo -e "   $( red /u )<USER>  - Search by user."
 echo -e "   $( red /q )<QUERY> - Search by query."
 echo -e "   $( red /l )<LIMIT> - Limit results."
-echo -e "   $( red /e )        - Extend bug stats with REOPENED & RESOLVED."
-echo -e "   $( red /a )        - Extend bug states with /e and UNCONFIRMED, \
-VERIFIED & CLOSED."
-echo -e "   $( red /r )        - Remove bugs from results that <USER> reported."
+echo -e "   $( red /e )        - Extend bug stats with REOPENED"
+echo -e "               and RESOLVED."
+echo -e "   $( red /a )        - Extend bug states with /e and"
+echo -e "               UNCONFIRMED, VERIFIED & CLOSED."
+echo -e "   $( red /r )        - Remove bugs from results that"
+echo -e "               <USER> reported."
 echo -e ""
 echo -e "   Example: $( red s ) $( red /u)john.doe $( red /q)DATEV \
 $( red /l)10 $( red /a)"
-echo -e "\nBUG DETAILS VIEW:\n"
+echo -e "\n$( blue "BUG DETAILS VIEW:")\n"
 echo -e " $( red o )        - Open bug in browser."
 echo -e " $( red r )        - Return to table view."
-echo -e "\nGENERAL:\n"
+echo -e "\n$( blue "GENERAL:")\n"
+echo -e " $( red "<UP_KEY>" )  - Go through command history"
 echo -e " $( red " h" )        - Print this help."
+echo -e "\n $( blue "PRO TIP:") Create the file $( red ~/"$PRESET_FILE" )"
+echo -e " and add commands that will immediately appear in your"
+echo -e " command history from start."
 echo -e ""
 }
 
@@ -156,7 +172,7 @@ function open_browser () {
 }
 
 function get_window_width () {
-	[ ! -z $( command -v tput ) ] && WIN_WIDTH=$(( $( tput cols ) - 3 ))
+	[ ! -z $( command -v tput ) ] && WIN_WIDTH=$(( $( tput cols ) - 10 ))
 }
 
 function load_table () {
@@ -306,7 +322,7 @@ function debug_input () {
 function main () {
 
 	# encourage user to install tput 
-	[ -z $( command -v tput ) ] && { echo "NOTE: If you would just install \
+	[ -z $( command -v tput ) ] && { echo "PRO TIP: If you'd install \
 'tput' (part of 'ncurses' package) bugzilla cli would look way more awesome \
 and colorful!"; sleep 3; }
 
