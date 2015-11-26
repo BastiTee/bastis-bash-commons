@@ -70,7 +70,7 @@ function clear_display () {
 		get_window_width
 		printf "\033c"
 		echo "$( highlight_2 ":: BUGZILLA CLI ::" ) \
-		$( highlight_1 "[$cmd_line]")"
+$( highlight_1 "[$cmd_line]")"
 	fi
 }
 
