@@ -48,25 +48,29 @@ WIN_WIDTH=100
 # 5    magenta   COLOR_MAGENTA   1,0,1
 # 6    cyan      COLOR_CYAN      0,1,1
 # 7    white     COLOR_WHITE     1,1,1
-COL_KEYS=6
-COL_STATES=3
+COLOR_HIGHLIGHT1=6
+COLOR_HIGHLIGHT2=3
+# last command line (not constant)
+cmd_line= 
 
 #===============================================================================
 
-function red () {
-	[ ! -z $( command -v tput ) ] && echo $( tput setaf $COL_KEYS )"$1"$( tput sgr0 )\
+function highlight_1 () {
+	[ ! -z $( command -v tput ) ] && echo $( tput setaf $COLOR_HIGHLIGHT1 )"$1"$( tput sgr0 )\
 	|| echo "$2"
 }
 
-function blue () {
-	[ ! -z $( command -v tput ) ] && echo $( tput setaf $COL_STATES )"$1"$( tput sgr0 )\
+function highlight_2 () {
+	[ ! -z $( command -v tput ) ] && echo $( tput setaf $COLOR_HIGHLIGHT2 )"$1"$( tput sgr0 )\
 	|| echo "$2"
 }
 
 function clear_display () {
 	if [ $ENABLE_CLEARS == 1 ]; then
+		get_window_width
 		printf "\033c"
-		blue ":: BUGZILLA CLI ::"
+		echo "$( highlight_2 ":: BUGZILLA CLI ::" ) \
+		$( highlight_1 "[$cmd_line]")"
 	fi
 }
 
@@ -103,36 +107,35 @@ function load_prerequisites () {
 	first_pass=1 # to avoid error message on first "empty command" 
 	in_bug_view=0 # toggle to save current view 
 	last_bugid= # last bug view that was opened 
-	cmd_line= # last command line 
 	
 	create_help >> ${TEMP_FILES[5]}
 }
 
 function create_help () {
-echo -e "\n$( blue "TABLE VIEW:" )\n"
-echo -e " $( red o )<BUGID> - Open bug with id <BUGID> in browser."
-echo -e " $( red s ) OPTS.. - Start search with options or"
+echo -e "\n$( highlight_2 "TABLE VIEW:" )\n"
+echo -e " $( highlight_1 o )<BUGID> - Open bug with id <BUGID> in browser."
+echo -e " $( highlight_1 s ) OPTS.. - Start search with options or"
 echo -e "            default parameters.\n"
 echo -e "   Options:\n"
-echo -e "   $( red /u )<USER>  - Search by user."
-echo -e "   $( red /q )<QUERY> - Search by query."
-echo -e "   $( red /l )<LIMIT> - Limit results."
-echo -e "   $( red /e )        - Extend bug stats with REOPENED"
+echo -e "   $( highlight_1 /u )<USER>  - Search by user."
+echo -e "   $( highlight_1 /q )<QUERY> - Search by query."
+echo -e "   $( highlight_1 /l )<LIMIT> - Limit results."
+echo -e "   $( highlight_1 /e )        - Extend bug stats with REOPENED"
 echo -e "               and RESOLVED."
-echo -e "   $( red /a )        - Extend bug states with /e and"
+echo -e "   $( highlight_1 /a )        - Extend bug states with /e and"
 echo -e "               UNCONFIRMED, VERIFIED & CLOSED."
-echo -e "   $( red /r )        - Remove bugs from results that"
+echo -e "   $( highlight_1 /r )        - Remove bugs from results that"
 echo -e "               <USER> reported."
 echo -e ""
-echo -e "   Example: $( red s ) $( red /u)john.doe $( red /q)DATEV \
-$( red /l)10 $( red /a)"
-echo -e "\n$( blue "BUG DETAILS VIEW:")\n"
-echo -e " $( red o )        - Open bug in browser."
-echo -e " $( red r )        - Return to table view."
-echo -e "\n$( blue "GENERAL:")\n"
-echo -e " $( red "<UP_KEY>" )  - Go through command history"
-echo -e " $( red " h" )        - Print this help."
-echo -e "\n $( blue "PRO TIP:") Create the file $( red ~/"$PRESET_FILE" )"
+echo -e "   Example: $( highlight_1 s ) $( highlight_1 /u)john.doe $( highlight_1 /q)DATEV \
+$( highlight_1 /l)10 $( highlight_1 /a)"
+echo -e "\n$( highlight_2 "BUG DETAILS VIEW:")\n"
+echo -e " $( highlight_1 o )        - Open bug in browser."
+echo -e " $( highlight_1 r )        - Return to table view."
+echo -e "\n$( highlight_2 "GENERAL:")\n"
+echo -e " $( highlight_1 "<UP_KEY>" )  - Go through command history"
+echo -e " $( highlight_1 " h" )        - Print this help."
+echo -e "\n $( highlight_2 "PRO TIP:") Create the file $( highlight_1 "~/$PRESET_FILE" )"
 echo -e " and add commands that will immediately appear in your"
 echo -e " command history from start."
 echo -e ""
@@ -181,17 +184,18 @@ function load_table () {
 
 	curl -k 2>/dev/null "$1" >> ${TEMP_FILES[0]}
 	subj_width=$(( $WIN_WIDTH - 5 -3 - 3 -3 - 3 -3 - 10 ))
-	red=""
-	blue=""
+	highlight_1=""
+	highlight_2=""
 	res=""
 	if [ ! -z $( command -v tput ) ]; then
-		red=$( tput setaf $COL_KEYS )
-		blue=$( tput setaf $COL_STATES )
+		highlight_1=$( tput setaf $COLOR_HIGHLIGHT1 )
+		highlight_2=$( tput setaf $COLOR_HIGHLIGHT2 )
 		res=$( tput sgr0 )
 	fi	
 	tail -n +2 "${TEMP_FILES[0]}" | sed -e "s/,\"/,/g" -e "s/\",/,/g" \
-	-e "s/^\"//g" -e "s/\"$//g" | awk -F',' -v red=$red -v res=$res \
-	-v blue=$blue -v swidth=$subj_width '{print red$1res","blue""substr($6,1,3)","substr($7,1,3)",\
+	-e "s/^\"//g" -e "s/\"$//g" | awk -F',' -v highlight_1=$highlight_1 -v res=$res \
+	-v highlight_2=$highlight_2 -v swidth=$subj_width '{print \
+	highlight_1$1res","highlight_2""substr($6,1,3)","substr($7,1,3)",\
 	"substr($5,1,10)res","substr($8,1,swidth)}' \
 	>> ${TEMP_FILES[1]} 
 
@@ -234,14 +238,14 @@ function load_bug () {
 	# check if bug exists 
 	has_error=$( cat ${TEMP_FILES[3]} | grep "bug error=\"NotFound\"" )
 	[ ! -z "$has_error" ] && \
-	{ red "No such bug!"; return; }
+	{ highlight_1 "No such bug!"; return; }
 	
 	# format output 
 	replace_link="~commits>${no_comm} (${no_ch} cherry-picks)~link>${bugurl}"
-	replace_red=$( red \\1 )
+	replace_highlight_1=$( highlight_1 \\1 )
 	cat ${TEMP_FILES[3]} | tr "\n" "~" | sed -r -e "s/~thetext.*//g" \
 	-e "s/ [^>~]+>/>/g" -e "s+$+$replace_link+g" | tr "~" "\n" |\
-	sed -r -e "s/^([^>]+)>/$replace_red>/g" -e "s/>/;/g" |\
+	sed -r -e "s/^([^>]+)>/$replace_highlight_1>/g" -e "s/>/;/g" |\
 	cut -c 1-$WIN_WIDTH | $CTABLE -s ";" -c "| "
 	cat ${TEMP_FILES[3]} | tr "\n" "~" | sed -r -e "s/.*thetext>//g" \
 	-e "s/\+\+\+ This bug was.*//g" | tr "~" "\n" \
@@ -305,7 +309,7 @@ short_desc_type=allwordssubstr"
 }
 
 function display_help () {
-	[ ! -z "$1" ] && echo -ne "$( red "$1")\n"
+	[ ! -z "$1" ] && echo -ne "$( highlight_1 "$1")\n"
 }
 
 function debug_input () {
@@ -314,7 +318,7 @@ function debug_input () {
 	echo ""
 	echo -ne "$1" | sed -e "s/[^\?]*?//g" -e "s/&/\n/g" -e "s/$/\n/g" |\
 	$CTABLE -s "=" -c "| " 
-	echo -e "\n$( blue "$1" )"
+	echo -e "\n$( highlight_2 "$1" )"
 	echo -e "\n<Press any key>"
 	read
 }
@@ -328,7 +332,6 @@ and colorful!"; sleep 3; }
 
 	trap cleanup EXIT SIGTERM # send the cleaning brigade afterwards 
 	load_prerequisites
-	
 	
 	# check if something was passed on cmd
 	[ ! -z "$1" ] && { cmd_line="$@"; first_pass=0; } || clear_display 
