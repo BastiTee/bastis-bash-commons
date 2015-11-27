@@ -13,7 +13,7 @@ BUGZILLA_URL=https://bugs.mycompany.com'."; exit 1; }
 # remove possible path character on end of BUGZILLA_URL
 bz_url=$( sed -r -e "s/\/+$//g" <<< $BUGZILLA_URL )
 
-# ==============================================================================
+# = CONSTANTS ==================================================================
 
 # only if set to '1' the cli will clear on screen changes
 ENABLE_CLEARS=1
@@ -53,275 +53,7 @@ COLOR_HIGHLIGHT2=3
 # last command line (not constant)
 cmd_line= 
 
-#===============================================================================
-
-function highlight_1 () {
-	[ ! -z $( command -v tput ) ] && echo $( tput setaf $COLOR_HIGHLIGHT1 )"$1"$( tput sgr0 )\
-	|| echo "$2"
-}
-
-function highlight_2 () {
-	[ ! -z $( command -v tput ) ] && echo $( tput setaf $COLOR_HIGHLIGHT2 )"$1"$( tput sgr0 )\
-	|| echo "$2"
-}
-
-function clear_display () {
-	if [ $ENABLE_CLEARS == 1 ]; then
-		get_window_width
-		printf "\033c"
-		echo "$( highlight_2 ":: BUGZILLA CLI ::" ) \
-$( highlight_1 "[$cmd_line]")"
-	fi
-}
-
-function load_prerequisites () {
-
-	# go to scriptpath
-	cd $( readlink -f $( dirname $0 ))
-
-	# load optional presets 
-	if [ -e ~/$PRESET_FILE ]; then
-		while read preset; do
-			[ ! -z "$preset" ] && history -s "$preset" 
-		done < ~/$PRESET_FILE
-	fi
-	
-	# check for bbc_table and if necessary load from github
-	CTABLE="bbc_table"
-	prereq=$( command -v $CTABLE )
-	if [ -z $prereq ]; then
-		curl -s -o bbc_table $TABLE_SRC
-		CTABLE="./bbc_table"
-	fi
-
-	# search for browser 
-	BROWSER=$( find_browser )
-	[ -z "$BROWSER" ] && { echo "No browser found!"; show_help;}
-
-	# create temporary files 
-	for i in $( seq 0 5 )
-	do 	
-		TEMP_FILES[$i]=$( mktemp --suffix=_bugzilla_cli )
-	done
-	
-	first_pass=1 # to avoid error message on first "empty command" 
-	in_bug_view=0 # toggle to save current view 
-	last_bugid= # last bug view that was opened 
-	
-	create_help >> ${TEMP_FILES[5]}
-}
-
-function create_help () {
-echo -e "\n$( highlight_2 "TABLE VIEW:" )\n"
-echo -e " $( highlight_1 o )<BUGID> - Open bug with id <BUGID> in browser."
-echo -e " $( highlight_1 s ) OPTS.. - Start search with options or"
-echo -e "            default parameters.\n"
-echo -e "   Options:\n"
-echo -e "   $( highlight_1 /u )<USER>  - Search by user."
-echo -e "   $( highlight_1 /q )<QUERY> - Search by query."
-echo -e "   $( highlight_1 /l )<LIMIT> - Limit results."
-echo -e "   $( highlight_1 /e )        - Extend bug stats with REOPENED"
-echo -e "               and RESOLVED."
-echo -e "   $( highlight_1 /a )        - Extend bug states with /e and"
-echo -e "               UNCONFIRMED, VERIFIED & CLOSED."
-echo -e "   $( highlight_1 /r )        - Remove bugs from results that"
-echo -e "               <USER> reported."
-echo -e ""
-echo -e "   Example: $( highlight_1 s ) $( highlight_1 /u)john.doe $( highlight_1 /q)DATEV \
-$( highlight_1 /l)10 $( highlight_1 /a)"
-echo -e "\n$( highlight_2 "BUG DETAILS VIEW:")\n"
-echo -e " $( highlight_1 o )        - Open bug in browser."
-echo -e " $( highlight_1 r )        - Return to table view."
-echo -e "\n$( highlight_2 "GENERAL:")\n"
-echo -e " $( highlight_1 "<UP_KEY>" )  - Go through command history"
-echo -e " $( highlight_1 " h" )        - Print this help."
-echo -e "\n $( highlight_2 "PRO TIP:") Create the file $( highlight_1 "~/$PRESET_FILE" )"
-echo -e " and add commands that will immediately appear in your"
-echo -e " command history from start."
-echo -e ""
-}
-
-function urlencode () {
-	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" \
-	-e "s/\\$/%24/g" -e "s/&/%26/g" -e "s/'/%27/g" -e "s/(/%28/g" \
-	-e "s/)/%29/g" -e "s/*/%2A/g" -e "s/+/%2B/g" -e "s/,/%2C/g" \
-	-e "s/\//%2F/g" -e "s/:/%3A/g" -e "s/;/%3B/g" -e "s/=/%3D/g" \
-	-e "s/?/%3F/g" -e "s/@/%40/g" -e "s/\[/%5B/g" -e "s/\]/%5D/g" \
-	-e "s/ /%20/g" 
-}
-
-function find_browser () {
-	
-	candidates="/cygdrive/c/Program*Files*/Google/Chrome/Application/chrome.exe /cygdrive/c/Program*Files*/Internet*Explorer/iexplore.exe
-	/cygdrive/c/Program*Files*/Mozilla*Firefox/firefox.exe"
-	for cand in $candidates
-	do 
-		if [ -e "$cand" ]; then
-			echo "$cand"
-			return
-		fi
-	done
-	echo ""
-}
-
-function open_browser () {
-	[ -z $1 ] && return
-	target="${BUG_BASE_URL}$1"
-	if [[ "$BROSER" =~ .*[cC]hrome.* ]]; then
-		"$BROWSER" /new-tab $target 2>/dev/null
-	else 
-		"$BROWSER" $target
-	fi
-}
-
-function get_window_width () {
-	[ ! -z $( command -v tput ) ] && WIN_WIDTH=$(( $( tput cols ) - 10 ))
-}
-
-function load_table () {
-	
-	get_window_width 
-
-	curl -k 2>/dev/null "$1" >> ${TEMP_FILES[0]}
-	subj_width=$(( $WIN_WIDTH - 5 -3 - 3 -3 - 3 -3 - 10 ))
-	highlight_1=""
-	highlight_2=""
-	res=""
-	if [ ! -z $( command -v tput ) ]; then
-		highlight_1=$( tput setaf $COLOR_HIGHLIGHT1 )
-		highlight_2=$( tput setaf $COLOR_HIGHLIGHT2 )
-		res=$( tput sgr0 )
-	fi	
-	tail -n +2 "${TEMP_FILES[0]}" | sed -e "s/,\"/,/g" -e "s/\",/,/g" \
-	-e "s/^\"//g" -e "s/\"$//g" | awk -F',' -v highlight_1=$highlight_1 -v res=$res \
-	-v highlight_2=$highlight_2 -v swidth=$subj_width '{print \
-	highlight_1$1res","highlight_2""substr($6,1,3)","substr($7,1,3)",\
-	"substr($5,1,10)res","substr($8,1,swidth)}' \
-	>> ${TEMP_FILES[1]} 
-
-	# format table 
-	cat ${TEMP_FILES[1]} | grep -v -e "bug_id" |\
-	$CTABLE -s "," -c "| " > ${TEMP_FILES[2]}
-	
-}
-
-function load_bug () {
-
-	get_window_width
-
-	# preparation 
-	echo "" > ${TEMP_FILES[3]}
-	echo "" > ${TEMP_FILES[4]}
-	bugurl="${BUG_BASE_URL}${1}"
-	
-	# get page content 
-	curl -k 2>/dev/null ${bugurl}"&ctype=xml" > ${TEMP_FILES[3]}
-	
-	# generate some statistics 
-	no_comm=$( cat ${TEMP_FILES[3]} | grep "tickets-auto-commit" | wc -l )
-	no_ch=$( cat ${TEMP_FILES[3]} | grep "cherry picked from" | wc -l )
-	 
-	# preprocess data 
-	cat ${TEMP_FILES[3]} |\
-	grep -v -e "^[[:space:]]*$" -e "long_desc" -e "<bug_when" \
-	-e "<who name" -e "<cf_" -e "<delta_ts" -e "<classification" \
-	-e "accessible>" -e "<target_" -e "<everconf" -e "<cc" \
-	-e "<qa_contact" | tr "\n" "~" |\
-	sed -r -e "s/.*<bug>//g" -e "s/<attachment.*//g" \
-	-e "s/<\/bug>.*//g" -e "s/<thetext>https:[^<]+<\/thetext>//g" |\
-	tr "~" "\n" | grep -v -e "^[[:space:]]*$" |\
-	sed -e "s/<\/.*//g" -e "s/^[[:space:]]*<//g" \
-	-e "s/&lt;/</g" -e "s/&gt;/>/g" -e "s/&quot;/\"/g" \
-	> ${TEMP_FILES[3]}
-	echo "" >> ${TEMP_FILES[3]}
-	
-	# check if bug exists 
-	has_error=$( cat ${TEMP_FILES[3]} | grep "bug error=\"NotFound\"" )
-	[ ! -z "$has_error" ] && \
-	{ highlight_1 "No such bug!"; return; }
-	
-	# format output 
-	replace_link="~commits>${no_comm} (${no_ch} cherry-picks)~link>${bugurl}"
-	replace_highlight_1=$( highlight_1 \\1 )
-	cat ${TEMP_FILES[3]} | tr "\n" "~" | sed -r -e "s/~thetext.*//g" \
-	-e "s/ [^>~]+>/>/g" -e "s+$+$replace_link+g" | tr "~" "\n" |\
-	sed -r -e "s/^([^>]+)>/$replace_highlight_1>/g" -e "s/>/;/g" |\
-	cut -c 1-$WIN_WIDTH | $CTABLE -s ";" -c "| "
-	cat ${TEMP_FILES[3]} | tr "\n" "~" | sed -r -e "s/.*thetext>//g" \
-	-e "s/\+\+\+ This bug was.*//g" | tr "~" "\n" \
-	| grep -i -v -e "Created an attachment" -e "Screenshot"	|\
-	fold -s -w $WIN_WIDTH
-}
-
-function cleanup () {
-	for i in $( seq 0 $(( ${#TEMP_FILES[@]} -1 )) )
-	do
-		rm -f ${TEMP_FILES[$i]}
-	done
-	exit 
-}
-
-function reset_tempfiles () {
-	for i in $( seq 0 $(( ${#TEMP_FILES[@]} -2 )) )
-	do
-		echo "" > ${TEMP_FILES[$i]}
-	done
-}
-
-function get_input_url () {
-	input_url=${BASE_URL}
-	in_limit=$LIMIT
-	ext_bugs=0
-	all_bugs=0
-	remove_reported=0
-	for par in $1
-	do
-		[[ "$par" =~ /l.* ]] && { \
-		in_limit=$( echo "$par" | sed -e "s/\/l[ ]*//g" ); }
-		[[ "$par" =~ /e ]] && { ext_bugs=1; }
-		[[ "$par" =~ /a ]] && { all_bugs=1; ext_bugs=1; }
-		[[ "$par" =~ /r ]] && { remove_reported=1; }
-		[[ "$par" =~ /u.* ]] && { bug_user=$( echo "$par" |\
-		sed -e "s/\/u[ ]*//g" ); }
-		[[ "$par" =~ /q.* ]] && { bug_query=$( echo "$par" |\
-		sed -e "s/\/q[ ]*//g" ); }
-	done
-
-	if [ $ext_bugs == 1 ]; then input_url="${input_url}${BUG_STATE_EXTEN}"; fi
-	if [ $all_bugs == 1 ]; then input_url="${input_url}${BUG_STATE_ALL}"; fi
-	input_url="${input_url}limit=$in_limit"
-	
-	if [ ! -z $bug_user ]; then
-		input_url="${input_url}&\
-email1=${bug_user}&\
-emailtype1=substring&\
-emailassigned_to1=1&\
-emailcc1=1"
-		[ $remove_reported != 1 ] && input_url="${input_url}&emailreporter1=1"
-	fi 
-	if [ ! -z $bug_query ]; then
-		input_url="${input_url}&\
-short_desc=${bug_query}&\
-short_desc_type=allwordssubstr"
-	fi
-
-	echo $input_url
-}
-
-function display_help () {
-	[ ! -z "$1" ] && echo -ne "$( highlight_1 "$1")\n"
-}
-
-function debug_input () {
-	return # remove to see debug view 
-	[ -z "$1" ] && return
-	echo ""
-	echo -ne "$1" | sed -e "s/[^\?]*?//g" -e "s/&/\n/g" -e "s/$/\n/g" |\
-	$CTABLE -s "=" -c "| " 
-	echo -e "\n$( highlight_2 "$1" )"
-	echo -e "\n<Press any key>"
-	read
-}
+#= MAIN PROGRAM LOOP ===========================================================
 
 function main () {
 
@@ -406,6 +138,297 @@ and colorful!"; sleep 3; }
 		
 	done
 }
+
+#= CORE FUNCTIONS ==============================================================
+
+function load_prerequisites () {
+
+	# go to scriptpath
+	cd $( readlink -f $( dirname $0 ))
+
+	# load optional presets 
+	if [ -e ~/$PRESET_FILE ]; then
+		while read preset; do
+			[ ! -z "$preset" ] && history -s "$preset" 
+		done < ~/$PRESET_FILE
+	fi
+	
+	# check for bbc_table and if necessary load from github
+	CTABLE="bbc_table"
+	prereq=$( command -v $CTABLE )
+	if [ -z $prereq ]; then
+		curl -s -o bbc_table $TABLE_SRC
+		CTABLE="./bbc_table"
+	fi
+
+	# search for browser 
+	BROWSER=$( find_browser )
+	[ -z "$BROWSER" ] && { echo "No browser found!"; show_help;}
+
+	# create temporary files 
+	for i in $( seq 0 5 )
+	do 	
+		TEMP_FILES[$i]=$( mktemp --suffix=_bugzilla_cli )
+	done
+	
+	first_pass=1 # to avoid error message on first "empty command" 
+	in_bug_view=0 # toggle to save current view 
+	last_bugid= # last bug view that was opened 
+	
+	create_help >> ${TEMP_FILES[5]}
+}
+
+function get_input_url () {
+	input_url=${BASE_URL}
+	in_limit=$LIMIT
+	ext_bugs=0
+	ext_query=0
+	all_bugs=0
+	remove_reported=0
+	for par in $1
+	do
+		[[ "$par" =~ /l.* ]] && { \
+		in_limit=$( echo "$par" | sed -e "s/\/l[ ]*//g" ); }
+		[[ "$par" =~ /e ]] && { ext_bugs=1; }
+		[[ "$par" =~ /c ]] && { ext_query=1; }
+		[[ "$par" =~ /a ]] && { all_bugs=1; ext_bugs=1; }
+		[[ "$par" =~ /r ]] && { remove_reported=1; }
+		[[ "$par" =~ /u.* ]] && { bug_user=$( echo "$par" |\
+		sed -e "s/\/u[ ]*//g" ); }
+		[[ "$par" =~ /q.* ]] && { bug_query=$( echo "$par" |\
+		sed -e "s/\/q[ ]*//g" ); }
+	done
+
+	if [ $ext_bugs == 1 ]; then input_url="${input_url}${BUG_STATE_EXTEN}"; fi
+	if [ $all_bugs == 1 ]; then input_url="${input_url}${BUG_STATE_ALL}"; fi
+	input_url="${input_url}limit=$in_limit"
+	
+	if [ ! -z $bug_user ]; then
+		input_url="${input_url}&\
+email1=${bug_user}&\
+emailtype1=substring&\
+emailassigned_to1=1&\
+emailcc1=1"
+		[ $remove_reported != 1 ] && input_url="${input_url}&emailreporter1=1"
+	fi 
+	if [ ! -z $bug_query ] && [ $ext_query == 0 ]; then
+		input_url="${input_url}&\
+short_desc=${bug_query}&\
+short_desc_type=allwordssubstr"
+	elif [ ! -z $bug_query ] && [ $ext_query == 1 ]; then
+		input_url="${input_url}&longdesc=${bug_query}&\
+longdesc_type=allwordssubstr"
+	fi
+
+	echo $input_url
+}
+
+function load_table () {
+	
+	get_window_width 
+
+	curl -k 2>/dev/null "$1" >> ${TEMP_FILES[0]}
+	subj_width=$(( $WIN_WIDTH - 5 -3 - 3 -3 - 3 -3 - 10 ))
+	highlight_1=""
+	highlight_2=""
+	res=""
+	if [ ! -z $( command -v tput ) ]; then
+		highlight_1=$( tput setaf $COLOR_HIGHLIGHT1 )
+		highlight_2=$( tput setaf $COLOR_HIGHLIGHT2 )
+		res=$( tput sgr0 )
+	fi	
+	tail -n +2 "${TEMP_FILES[0]}" | sed -e "s/,\"/,/g" -e "s/\",/,/g" \
+	-e "s/^\"//g" -e "s/\"$//g" | awk -F',' -v highlight_1=$highlight_1 \
+	-v res=$res -v highlight_2=$highlight_2 -v swidth=$subj_width '{print \
+	highlight_1$1res","highlight_2""substr($6,1,3)","substr($7,1,3)",\
+	"substr($5,1,10)res","substr($8,1,swidth)}' \
+	>> ${TEMP_FILES[1]} 
+
+	# format table 
+	cat ${TEMP_FILES[1]} | grep -v -e "bug_id" |\
+	$CTABLE -s "," -c "| " > ${TEMP_FILES[2]}
+	
+}
+
+function load_bug () {
+
+	get_window_width
+
+	# preparation 
+	echo "" > ${TEMP_FILES[3]}
+	echo "" > ${TEMP_FILES[4]}
+	bugurl="${BUG_BASE_URL}${1}"
+	
+	# get page content 
+	curl -k 2>/dev/null ${bugurl}"&ctype=xml" > ${TEMP_FILES[3]}
+	
+	# generate some statistics 
+	no_comm=$( cat ${TEMP_FILES[3]} | grep "tickets-auto-commit" | wc -l )
+	no_ch=$( cat ${TEMP_FILES[3]} | grep "cherry picked from" | wc -l )
+	 
+	# preprocess data 
+	cat ${TEMP_FILES[3]} |\
+	grep -v -e "^[[:space:]]*$" -e "long_desc" -e "<bug_when" \
+	-e "<who name" -e "<cf_" -e "<delta_ts" -e "<classification" \
+	-e "accessible>" -e "<target_" -e "<everconf" -e "<cc" \
+	-e "<qa_contact" | tr "\n" "~" |\
+	sed -r -e "s/.*<bug>//g" -e "s/<attachment.*//g" \
+	-e "s/<\/bug>.*//g" -e "s/<thetext>https:[^<]+<\/thetext>//g" |\
+	tr "~" "\n" | grep -v -e "^[[:space:]]*$" |\
+	sed -e "s/<\/.*//g" -e "s/^[[:space:]]*<//g" \
+	-e "s/&lt;/</g" -e "s/&gt;/>/g" -e "s/&quot;/\"/g" \
+	> ${TEMP_FILES[3]}
+	echo "" >> ${TEMP_FILES[3]}
+	
+	# check if bug exists 
+	has_error=$( cat ${TEMP_FILES[3]} | grep "bug error=\"NotFound\"" )
+	[ ! -z "$has_error" ] && \
+	{ highlight_1 "No such bug!"; return; }
+	
+	# format output 
+	replace_link="~commits>${no_comm} (${no_ch} cherry-picks)~link>${bugurl}"
+	replace_highlight_1=$( highlight_1 \\1 )
+	cat ${TEMP_FILES[3]} | tr "\n" "~" | sed -r -e "s/~thetext.*//g" \
+	-e "s/ [^>~]+>/>/g" -e "s+$+$replace_link+g" | tr "~" "\n" |\
+	sed -r -e "s/^([^>]+)>/$replace_highlight_1>/g" -e "s/>/;/g" |\
+	cut -c 1-$WIN_WIDTH | $CTABLE -s ";" -c "| "
+	cat ${TEMP_FILES[3]} | tr "\n" "~" | sed -r -e "s/.*thetext>//g" \
+	-e "s/\+\+\+ This bug was.*//g" | tr "~" "\n" \
+	| grep -i -v -e "Created an attachment" -e "Screenshot"	|\
+	fold -s -w $WIN_WIDTH
+}
+
+
+#= DISPLAY HELPER ==============================================================
+
+function highlight_1 () {
+	[ ! -z $( command -v tput ) ] && \
+	echo $( tput setaf $COLOR_HIGHLIGHT1 )"$1"$( tput sgr0 )\
+	|| echo "$2"
+}
+
+function highlight_2 () {
+	[ ! -z $( command -v tput ) ] && \
+	echo $( tput setaf $COLOR_HIGHLIGHT2 )"$1"$( tput sgr0 )\
+	|| echo "$2"
+}
+
+function clear_display () {
+	if [ $ENABLE_CLEARS == 1 ]; then
+		get_window_width
+		printf "\033c"
+		echo "$( highlight_2 ":: BUGZILLA CLI ::" ) \
+$( highlight_1 "[$cmd_line]")"
+	fi
+}
+
+function get_window_width () {
+	[ ! -z $( command -v tput ) ] && WIN_WIDTH=$(( $( tput cols ) - 10 ))
+}
+
+function display_help () {
+	[ ! -z "$1" ] && echo -ne "$( highlight_1 "$1")\n"
+}
+
+function debug_input () {
+	return # remove to see debug view 
+	[ -z "$1" ] && return
+	echo ""
+	echo -ne "$1" | sed -e "s/[^\?]*?//g" -e "s/&/\n/g" -e "s/$/\n/g" |\
+	$CTABLE -s "=" -c "| " 
+	echo -e "\n$( highlight_2 "$1" )"
+	echo -e "\n<Press any key>"
+	read
+}
+
+#= BROWSER HELPER ==============================================================
+
+function urlencode () {
+	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" \
+	-e "s/\\$/%24/g" -e "s/&/%26/g" -e "s/'/%27/g" -e "s/(/%28/g" \
+	-e "s/)/%29/g" -e "s/*/%2A/g" -e "s/+/%2B/g" -e "s/,/%2C/g" \
+	-e "s/\//%2F/g" -e "s/:/%3A/g" -e "s/;/%3B/g" -e "s/=/%3D/g" \
+	-e "s/?/%3F/g" -e "s/@/%40/g" -e "s/\[/%5B/g" -e "s/\]/%5D/g" \
+	-e "s/ /%20/g" 
+}
+
+function find_browser () {
+	
+	candidates="/cygdrive/c/Program*Files*/Google/Chrome/Application/chrome.exe /cygdrive/c/Program*Files*/Internet*Explorer/iexplore.exe
+	/cygdrive/c/Program*Files*/Mozilla*Firefox/firefox.exe"
+	for cand in $candidates
+	do 
+		if [ -e "$cand" ]; then
+			echo "$cand"
+			return
+		fi
+	done
+	echo ""
+}
+
+function open_browser () {
+	[ -z $1 ] && return
+	target="${BUG_BASE_URL}$1"
+	if [[ "$BROSER" =~ .*[cC]hrome.* ]]; then
+		"$BROWSER" /new-tab $target 2>/dev/null
+	else 
+		"$BROWSER" $target
+	fi
+}
+
+#= TEMP FILE HELPER ============================================================
+
+function cleanup () {
+	for i in $( seq 0 $(( ${#TEMP_FILES[@]} -1 )) )
+	do
+		rm -f ${TEMP_FILES[$i]}
+	done
+	exit 
+}
+
+function reset_tempfiles () {
+	for i in $( seq 0 $(( ${#TEMP_FILES[@]} -2 )) )
+	do
+		echo "" > ${TEMP_FILES[$i]}
+	done
+}
+
+#= USER HELP ===================================================================
+
+function create_help () {
+echo -e "\n$( highlight_2 "TABLE VIEW:" )\n"
+echo -e " $( highlight_1 o )<BUGID> - Open bug with id <BUGID> in browser."
+echo -e " $( highlight_1 s ) OPTS.. - Start search with options or"
+echo -e "            default parameters.\n"
+echo -e "   Options:\n"
+echo -e "   $( highlight_1 /u )<USER>  - Search by user."
+echo -e "   $( highlight_1 /q )<QUERY> - Search by query in summaries."
+echo -e "   $( highlight_1 /c )        - Search by query in comments instead."
+echo -e "   $( highlight_1 /l )<LIMIT> - Limit results."
+echo -e "   $( highlight_1 /e )        - Extend bug stats with REOPENED"
+echo -e "               and RESOLVED."
+echo -e "   $( highlight_1 /a )        - Extend bug states with /e and"
+echo -e "               UNCONFIRMED, VERIFIED & CLOSED."
+echo -e "   $( highlight_1 /r )        - Remove bugs from results that"
+echo -e "               <USER> reported."
+echo -e ""
+echo -e "   Example: $( highlight_1 s ) $( highlight_1 /u)john.doe \
+$( highlight_1 /q)DATEV $( highlight_1 /c) $( highlight_1 /l)10  \
+$( highlight_1 /a)"
+echo -e "\n$( highlight_2 "BUG DETAILS VIEW:")\n"
+echo -e " $( highlight_1 o )        - Open bug in browser."
+echo -e " $( highlight_1 r )        - Return to table view."
+echo -e "\n$( highlight_2 "GENERAL:")\n"
+echo -e " $( highlight_1 "<UP_KEY>" )  - Go through command history"
+echo -e " $( highlight_1 " h" )        - Print this help."
+echo -e "\n $( highlight_2 "PRO TIP:") Create the file \
+$( highlight_1 "~/$PRESET_FILE" )"
+echo -e " and add commands that will immediately appear in your"
+echo -e " command history from start."
+echo -e ""
+}
+
+#===============================================================================
 
 main "$@"
 
