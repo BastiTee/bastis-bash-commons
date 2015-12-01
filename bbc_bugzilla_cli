@@ -20,11 +20,11 @@ ENABLE_CLEARS=1
 # Base URL for search lookup 
 BASE_URL="${bz_url}/buglist.cgi?\
 order=bug_id%20DESC&ctype=csv&bug_status=NEW&bug_status=ASSIGNED\
-&query_format=advanced&query_based_on=&"
+&bug_status=REOPENED&query_format=advanced&query_based_on=&"
 # Base URL of bug detail pages 
 BUG_BASE_URL="${bz_url}/show_bug.cgi?id="
 # parameter suffix to display more bug states 
-BUG_STATE_EXTEN="bug_status=REOPENED&bug_status=RESOLVED&"
+BUG_STATE_EXTEN="bug_status=RESOLVED&"
 BUG_STATE_ALL="bug_status=UNCONFIRMED&bug_status=VERIFIED&bug_status=CLOSED&"
 # Default bbc_table command
 CTABLE="bbc_table"
