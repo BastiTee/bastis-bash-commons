@@ -226,7 +226,8 @@ longdesc_type=allwordssubstr"
 function load_table () {
 	
 	get_window_width 
-
+	fs="~"
+	
 	curl -k 2>/dev/null "$1" >> ${TEMP_FILES[0]}
 	subj_width=$(( $WIN_WIDTH - 5 -3 - 3 -3 - 3 -3 - 10 ))
 	highlight_1=""
@@ -237,17 +238,20 @@ function load_table () {
 		highlight_2=$( tput setaf $COLOR_HIGHLIGHT2 )
 		res=$( tput sgr0 )
 	fi	
-	tail -n +2 "${TEMP_FILES[0]}" | sed -e "s/,\"/,/g" -e "s/\",/,/g" \
-	-e "s/^\"//g" -e "s/\"$//g" | awk -F',' -v highlight_1=$highlight_1 \
-	-v res=$res -v highlight_2=$highlight_2 -v swidth=$subj_width '{print \
-	highlight_1$1res","highlight_2""substr($6,1,3)","substr($7,1,3)",\
-	"substr($5,1,10)res","substr($8,1,swidth)}' \
+	tail -n +2 "${TEMP_FILES[0]}" | sed -r -e "s/\",\"/${fs}/g" \
+	-e "s/,\"+/${fs}/g" -e "s/\"+,/${fs}/g" \
+	-e "s/^\"//g" -e "s/\"$//g" | awk -F${fs} -v highlight_1=$highlight_1 \
+	-v res=$res -v highlight_2=$highlight_2 -v sep=${fs} \
+	-v swidth=$subj_width '{print \
+	highlight_1$1res""sep""highlight_2""substr($6,1,3)""sep""substr($7,1,3)\
+	""sep""substr($5,1,10)res""sep""substr($8,1,swidth)}' \
 	>> ${TEMP_FILES[1]} 
 
 	# format table 
 	cat ${TEMP_FILES[1]} | grep -v -e "bug_id" |\
-	$CTABLE -s "," -c "| " > ${TEMP_FILES[2]}
+	$CTABLE -s ${fs} -c "| " > ${TEMP_FILES[2]}
 	
+	#cat ${TEMP_FILES[1]} > ${TEMP_FILES[2]} # debug
 }
 
 function load_bug () {
