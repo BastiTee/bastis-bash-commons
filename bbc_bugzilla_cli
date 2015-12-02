@@ -50,6 +50,10 @@ WIN_WIDTH=100
 # 7    white     COLOR_WHITE     1,1,1
 COLOR_HIGHLIGHT1=6
 COLOR_HIGHLIGHT2=3
+# tput commands (not constant) 
+highlight_1=""
+highlight_2=""
+res=""
 # last command line (not constant)
 cmd_line= 
 
@@ -66,7 +70,8 @@ and colorful!"; sleep 3; }
 	load_prerequisites
 	
 	# check if something was passed on cmd
-	[ ! -z "$1" ] && { cmd_line="$@"; first_pass=0; } || clear_display 
+	[ ! -z "$1" ] && { cmd_line="$@"; first_pass=0; append_history "$@"; } \
+	|| clear_display 
 
 	while true # main loop
 	do
@@ -84,6 +89,14 @@ and colorful!"; sleep 3; }
 			elif [ $in_bug_view == 0 ] && [ "$cmd_line" == "o" ]; then
 				display_help "You are not in bug view!"
 			#===================================================================
+			elif [ $in_bug_view == 1 ] && [ "$cmd_line" == "t" ]; then
+				list_touched_files $last_bugid 
+				clear_display
+				cat ${TEMP_FILES[6]}
+			#===================================================================
+			elif [ $in_bug_view == 0 ] && [ "$cmd_line" == "t" ]; then
+				display_help "You are not in bug view!"
+			#===================================================================
 			elif [[ "$cmd_line" =~ o[0-9]+ ]]; then
 				open_browser $( tr -d "o" <<< $cmd_line )
 				clear_display
@@ -98,8 +111,10 @@ and colorful!"; sleep 3; }
 				display_help "You are not in bug view!"
 			#===================================================================
 			elif [[ "$cmd_line" =~ ^[0-9]+$ ]]; then
-				display_help "Loading bug details... "
-				load_bug $cmd_line > ${TEMP_FILES[4]}			
+				#if [ "$cmd_line" != "$last_bugid" ]; then
+					display_help "Loading bug details... "
+					load_bug $cmd_line > ${TEMP_FILES[4]}
+				#fi
 				clear_display
 				cat ${TEMP_FILES[4]} # prints the current bug 
 				last_bugid=$cmd_line
@@ -134,7 +149,7 @@ and colorful!"; sleep 3; }
 		# enables input reading including command history
 		cmd_line=
 		while [ -z "$cmd_line" ]; do read -r -e -d $'\n' -p ":: " cmd_line; done
-		history -s "$cmd_line"
+		append_history "$cmd_line"
 		
 	done
 }
@@ -149,7 +164,7 @@ function load_prerequisites () {
 	# load optional presets 
 	if [ -e ~/$PRESET_FILE ]; then
 		while read preset; do
-			[ ! -z "$preset" ] && history -s "$preset" 
+			[ ! -z "$preset" ] && append_history "$preset" 
 		done < ~/$PRESET_FILE
 	fi
 	
@@ -166,10 +181,17 @@ function load_prerequisites () {
 	[ -z "$BROWSER" ] && { echo "No browser found!"; show_help;}
 
 	# create temporary files 
-	for i in $( seq 0 5 )
+	for i in $( seq 0 6 )
 	do 	
 		TEMP_FILES[$i]=$( mktemp --suffix=_bugzilla_cli )
 	done
+	
+	# set tput variables if available 
+	if [ ! -z $( command -v tput ) ]; then
+		highlight_1=$( tput setaf $COLOR_HIGHLIGHT1 )
+		highlight_2=$( tput setaf $COLOR_HIGHLIGHT2 )
+		res=$( tput sgr0 )
+	fi
 	
 	first_pass=1 # to avoid error message on first "empty command" 
 	in_bug_view=0 # toggle to save current view 
@@ -230,14 +252,7 @@ function load_table () {
 	
 	curl -k 2>/dev/null "$1" >> ${TEMP_FILES[0]}
 	subj_width=$(( $WIN_WIDTH - 5 -3 - 3 -3 - 3 -3 - 10 ))
-	highlight_1=""
-	highlight_2=""
-	res=""
-	if [ ! -z $( command -v tput ) ]; then
-		highlight_1=$( tput setaf $COLOR_HIGHLIGHT1 )
-		highlight_2=$( tput setaf $COLOR_HIGHLIGHT2 )
-		res=$( tput sgr0 )
-	fi	
+	
 	tail -n +2 "${TEMP_FILES[0]}" | sed -r -e "s/\",\"/${fs}/g" \
 	-e "s/,\"+/${fs}/g" -e "s/\"+,/${fs}/g" \
 	-e "s/^\"//g" -e "s/\"$//g" | awk -F${fs} -v highlight_1=$highlight_1 \
@@ -302,8 +317,25 @@ function load_bug () {
 	fold -s -w $WIN_WIDTH
 }
 
+function list_touched_files () {
+	bugurl="${BUG_BASE_URL}${1}"
+	curl -k 2>/dev/null ${bugurl}"&ctype=xml" | grep -e \
+	"^[MAD][[:space:]]\{1,\}com" | sed -r -e "s/<\/thetext>//g" \
+	-e "s/com\.scopevisio\.erp/${highlight_1}sv${res}/g" \
+	-e "s/src\/com\/scopevisio\/erp/${highlight_1}src${res}/g"\
+	-e "s/^[MAD]//g" | sort | uniq -c |\
+	sort -rn | awk -v res=$res -v highlight_2=$highlight_2 \
+	'{print $2highlight_2" ("$1")"res}' > ${TEMP_FILES[6]}
+}
 
 #= DISPLAY HELPER ==============================================================
+
+function append_history () {
+	last_line=$( history | tail -n1 | sed -r -e "s/[ ]*[0-9]+[ ]*//" ) 
+	# >&2 echo "$last_line <> $@"
+	# only append non-duplicate lines 
+	[ "$last_line" != "$@" ] && history -s "$@"
+}
 
 function highlight_1 () {
 	[ ! -z $( command -v tput ) ] && \
@@ -422,6 +454,7 @@ $( highlight_1 /a)"
 echo -e "\n$( highlight_2 "BUG DETAILS VIEW:")\n"
 echo -e " $( highlight_1 o )        - Open bug in browser."
 echo -e " $( highlight_1 r )        - Return to table view."
+echo -e " $( highlight_1 t )        - Print touched files."
 echo -e "\n$( highlight_2 "GENERAL:")\n"
 echo -e " $( highlight_1 "<UP_KEY>" )  - Go through command history"
 echo -e " $( highlight_1 " h" )        - Print this help."
