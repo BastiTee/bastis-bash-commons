@@ -321,8 +321,8 @@ function list_touched_files () {
 	bugurl="${BUG_BASE_URL}${1}"
 	curl -k 2>/dev/null ${bugurl}"&ctype=xml" | grep -e \
 	"^[MAD][[:space:]]\{1,\}com" | sed -r -e "s/<\/thetext>//g" \
-	-e "s/com\.scopevisio\.erp/${highlight_1}sv${res}/g" \
-	-e "s/src\/com\/scopevisio\/erp/${highlight_1}src${res}/g"\
+	-e "s/com\.scopevisio\.erp/${highlight_1}<sv>${res}/g" \
+	-e "s/src\/com\/scopevisio\/erp/${highlight_1}<src>${res}/g"\
 	-e "s/^[MAD]//g" | sort | uniq -c |\
 	sort -rn | awk -v res=$res -v highlight_2=$highlight_2 \
 	'{print $2highlight_2" ("$1")"res}' > ${TEMP_FILES[6]}
@@ -339,14 +339,12 @@ function append_history () {
 
 function highlight_1 () {
 	[ ! -z $( command -v tput ) ] && \
-	echo $( tput setaf $COLOR_HIGHLIGHT1 )"$1"$( tput sgr0 )\
-	|| echo "$2"
+	echo $( tput setaf $COLOR_HIGHLIGHT1 )"$1"$( tput sgr0 ) || echo "$1"
 }
 
 function highlight_2 () {
 	[ ! -z $( command -v tput ) ] && \
-	echo $( tput setaf $COLOR_HIGHLIGHT2 )"$1"$( tput sgr0 )\
-	|| echo "$2"
+	echo $( tput setaf $COLOR_HIGHLIGHT2 )"$1"$( tput sgr0 ) || echo "$1"
 }
 
 function clear_display () {
