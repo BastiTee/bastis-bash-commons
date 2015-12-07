@@ -114,10 +114,8 @@ function bbc_exe () {
 runs it. This comes in handy if you are unsure whether a tool exists.\
 [1] Command to be executed." $@ || return $?
 	
-	if [ ! -v $( command -v $1 ) ]
-	then
-		eval $@
-	fi
+	[ ! -v $( command -v $1 ) ] && { eval $@; return 0; } || return 1
+	
 }
 
 function bbc_print_xml () {
@@ -156,7 +154,8 @@ return $?
 }
 
 function bbc_clear () {
-	init_help_output "$FUNCNAME" "Clears the screen for real." $@ || return $?
+	init_help_output "$FUNCNAME" "Clears the screen for real and removes any\
+preceeding content." $@ || return $?
 
 	printf "\033c"
 }
@@ -220,6 +219,14 @@ with of 70.[1] Input text.[2] Optional line width." \
 function init_help_output () {
 	function_name="$1"; shift
 	function_help="$1"; shift
+	fg=
+	rs=
+	fga=
+	if [ ! -v $( command -v tput ) ]; then
+		fg=$( tput setaf 6 )
+		fga=$( tput setaf 3 )
+		rs=$( tput sgr0 )
+	fi
 	
 	if [ "$1" == "-h" ] || [ "$1" == "--h" ] || [ "$1" == "-help" ] || \
 	[ "$1" == "--help" ]
@@ -229,12 +236,12 @@ function init_help_output () {
 		function_help=$( echo -e "$function_help" | \
 		sed -e "s/\[1\]/\n[1]/g" )
 		function_help=$( echo -e "$function_help" | \
-		sed -r -e "s/(\[[0-9]\])/\n\1/g" )
+		sed -r -e "s/(\[[0-9]\])/\n${fga}\1${rs}/g" )
 		# construct help output 
-		help_string="\nUsage: ${function_name}"
+		help_string="\nUsage: ${fg}${function_name}${rs}"
 		arg_string=
 		for i in $( seq 1 $arguments ); do arg_string="$arg_string[$i] "; done
-		help_string="${help_string} ${arg_string}\n\n${function_help}"
+		help_string="${help_string} ${fga}${arg_string}${rs}\n\n${function_help}"
 		# print help string 
 		bbc_justify_text "$help_string" 70
 		return 1
