@@ -123,13 +123,13 @@ while getopts "hi:p:fo:vc:" opt; do
 done
 
 # Check cmd arguments 
-if [ -v $INPUT_FOLDER ]; then echo "Input folder not set."; show_help 1; fi 
-if [ ! -e $INPUT_FOLDER ]; then echo "Input folder does not exist."; show_help 1; fi
-if [ -v $OUTPUT_FILENAME ]; then echo "Output filename not set."; show_help 1; fi  
+if [ -v "$INPUT_FOLDER" ]; then echo "Input folder not set."; show_help 1; fi 
+if [ ! -e "$INPUT_FOLDER" ]; then echo "Input folder does not exist."; show_help 1; fi
+if [ -v "$OUTPUT_FILENAME" ]; then echo "Output filename not set."; show_help 1; fi  
 set_core_configuration "$DEFAULT_CONFIG_STRING"
 
 # prepare environment 
-cd $INPUT_FOLDER 
+cd "$INPUT_FOLDER" 
 mkdir -p $TEMPF
 
 if [ $RECODE_ONLY == 0 ]
