@@ -9,11 +9,44 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
-function bbc_remove_duplicate_empty_lines () {
-	init_help_output "$FUNCNAME" "Removes duplicate empty lines read from \
-standard-in." $@ || return $?
+# ==============================================================================
+# ENVIRONMENT UTILITIES
+# ==============================================================================
+
+function bbc_is_cygwin () {
+	init_help_output "$FUNCNAME" "Returs 1 if this script runs in a cygwin \
+environment and 0 if not." $@ || return $?
+
+	[ -z "$( uname -a | grep -i "cygwin" )"/ ] && echo 0 || echo 1 
+    
+}
+
+function bbc_get_bash_version () {
+	init_help_output "$FUNCNAME" "Returns the bash version as separated string \
+to check for compatibility." $@ || return $?
+
+	bash --version | head -n1 | sed -r -e "s/^[^0-9]+([0-9\\.]+).*/\1/g" |\
+	tr "." " "
+}
+
+function bbc_exe () {
+	init_help_output "$FUNCNAME" "Tests if a command does exist and, if yes, \
+runs it. This comes in handy if you are unsure whether a tool exists.\
+[1] Command to be executed." $@ || return $?
 	
-	sed 'N;/^\n$/d;P;D' < /dev/stdin 
+	[ ! -v $( command -v $1 ) ] && { eval $@; return 0; } || return 1
+	
+}
+
+# ==============================================================================
+# PRODUCTIVITY UTILITIES
+# ==============================================================================
+
+function bbc_clear () {
+	init_help_output "$FUNCNAME" "Clears the screen for real and removes any\
+preceeding content." $@ || return $?
+
+	printf "\033c"
 }
 
 function bbc_wd () {
@@ -65,13 +98,116 @@ pattern." $@ || return $?
 	fi 
 }
 
-function bbc_get_bash_version () {
-	init_help_output "$FUNCNAME" "Returns the bash version as separated string \
-to check for compatibility." $@ || return $?
-
-	bash --version | head -n1 | sed -r -e "s/^[^0-9]+([0-9\\.]+).*/\1/g" |\
-	tr "." " "
+function bbc_generate_rsa_keypair () {
+    init_help_output "$FUNCNAME" "Generates an RSA public and private key pair \
+in the users home folder." $@ || return $?
+    
+    [ $( bbc_is_cygwin ) == 1 ] && \
+    targetdir_arg="-f $( cygpath -u ${USERPROFILE}/.ssh )/id_rsa"
+    ssh-keygen -q -t rsa -b 4096 ${targetdir_arg} -N ''
 }
+
+function bbc_run_psql () {
+	init_help_output "$FUNCNAME" "Runs a given postgresql command through the \
+psql command line. ATTENTION: This method assumes that \$PG_PASS \$PG_USSER \
+and \$PG_DB are set somewhere in your script.[1] PostgreSQL Query with \
+escaped quotation marks." $@ || return $?
+
+	export PGPASSWORD=$PG_PASS
+	psql -h localhost -t -F " " -A -c "$1" $PG_DB $PG_USER
+}
+
+function bbc_archive () {
+	init_help_output "$FUNCNAME" "Packs the given folder to a tar-gz archive \
+and removes the source folder on successful packaging. Optionally you can set \
+a 'BBC_ARCHIVE_FOLDER' pointing to your desired archive folder.[1] Source \
+folder to be packed." $@ || return $?
+
+    target_folder="."
+    [ ! -z $BBC_ARCHIVE_FOLDER ] && target_folder=$BBC_ARCHIVE_FOLDER
+    target_folder=$( readlink -f $target_folder )
+    [ -z "$1" ] && { echo "No folder provided."; return 1; }
+    datetime=$( bbc_get_datetime )
+
+    fulldir=$( readlink -f $1 )
+    basename=$( basename $fulldir )
+    trgfile=${target_folder}/${datetime}_${basename}.tar.gz
+
+    echo -e "You want to pack '$fulldir' to '$trgfile' and remove source folder."
+    yes=$( bbc_yesno "Are you sure?" )
+
+    [ $yes != 1 ] && { echo; return 0; }
+    tar -zcvf ${trgfile} -C $1 .
+    if [ -e ${trgfile} ] && [ $( tar -xOf ${trgfile} > /dev/null; echo $? ) == 0 ]
+    then
+      echo -e "\nPacking successful. Will remove source folder."
+      rm -rf $fulldir
+    else
+      echo -e "\nError while packing. Source folder not deleted."
+      return 1
+    fi
+    echo -e "Done."
+    return 0
+}
+
+# ==============================================================================
+# GIT UTILITIES
+# ==============================================================================
+
+function bbc_github_init () {
+    init_help_output "$FUNCNAME" "Quick fix to setup a newly cloned github \
+repository with the desired username and email and apply some fixes.[1] \
+Your github username.[2] Your github e-mail address." $@ || return $?
+
+    [ -z "$1" ] && { echo "No username provided."; return 1; } 
+    [ -z "$2" ] && { echo "No user e-mail provided."; return 1; } 
+
+    git config user.name "$1"
+	git config user.email "$2"
+	# Fix https origin 
+	https_link=$( cat .git/config | grep -A3 "\[remote \"origin\"\]" |\
+	grep https: | awk '{print $3}')
+	if [ ! -v $https_link ]
+	then
+		echo "Fixing https origin $https_link"
+		sed -i -e "s/https\:\/\/github\.com\//git@github.com:/g" .git/config
+		echo "Maybe you need to fix: http://stackoverflow.com/questions/\
+2643502/git-permission-denied-publickey"
+	fi
+    git pull 
+}
+
+function bbc_git_is_repo () {
+    init_help_output "$FUNCNAME" "Returns 1 if you're currently inside a git \
+repository folder." $@ || return $?
+
+    git rev-parse 2> /dev/null; [ $? == 0 ] && echo 1
+}
+
+function bbc_git_author_contributions () {
+    init_help_output "$FUNCNAME" "Checks for line/code changes of the given \
+author and outputs some summarized statistics.[1] Username (can be a pattern).\
+[2] Since-date, e.g., 01.12.2015." $@ || return $?
+
+    [ "$( bbc_git_is_repo )" != "1" ] && { echo "You're not inside a git repo \
+directory."; return 1; }
+    [ -z "$1" ] && { echo "Author name must be set."; return 1; }
+    since="1.weeks"
+    [ ! -z "$2" ] && since="$2"
+    
+    git_base="git --no-pager log --no-merges --since=${since} --all \
+    --not origin/rel12v0 --author=$1"
+    eval $git_base --oneline
+    eval $git_base --numstat --pretty="" | awk \
+    'BEGIN { ins=0; del=0; files=0; } \
+    { files+=1; ins+=$1; del+=$2; } \
+     END {print "== "ins" insertions, "del" deletions, "files" files changed." }'
+    
+}
+
+# ==============================================================================
+# INTERACTIVITY UTILITIES
+# ==============================================================================
 
 function bbc_askpass () {
 	init_help_output "$FUNCNAME" "Asks the user for a password.[1] Optional \
@@ -97,47 +233,9 @@ function bbc_yesno () {
 	fi
 }
 
-function bbc_urlencode () {
-	init_help_output "$FUNCNAME" "URL-enodes the given string.[1] The \
-string to be encoded." $@ || return $?
-
-	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" \
-	-e "s/\\$/%24/g" -e "s/&/%26/g" -e "s/'/%27/g" -e "s/(/%28/g" \
-	-e "s/)/%29/g" -e "s/*/%2A/g" -e "s/+/%2B/g" -e "s/,/%2C/g" \
-	-e "s/\//%2F/g" -e "s/:/%3A/g" -e "s/;/%3B/g" -e "s/=/%3D/g" \
-	-e "s/?/%3F/g" -e "s/@/%40/g" -e "s/\[/%5B/g" -e "s/\]/%5D/g" \
-	-e "s/ /%20/g" 
-}
-
-function bbc_exe () {
-	init_help_output "$FUNCNAME" "Tests if a command does exist and, if yes, \
-runs it. This comes in handy if you are unsure whether a tool exists.\
-[1] Command to be executed." $@ || return $?
-	
-	[ ! -v $( command -v $1 ) ] && { eval $@; return 0; } || return 1
-	
-}
-
-function bbc_print_xml () {
-	init_help_output "$FUNCNAME" "Pretty-prints an XML string to the command \
-line.[1] XML-file." $@ || return $?
-	
-	bbc_exe tput setaf 2
-	echo
-	xmllint --format $1
-	echo
-	bbc_exe tput sgr 0
-}
-
-function bbc_run_psql () {
-	init_help_output "$FUNCNAME" "Runs a given postgresql command through the \
-psql command line. ATTENTION: This method assumes that \$PG_PASS \$PG_USSER \
-and \$PG_DB are set somewhere in your script.[1] PostgreSQL Query with \
-escaped quotation marks." $@ || return $?
-
-	export PGPASSWORD=$PG_PASS
-	psql -h localhost -t -F " " -A -c "$1" $PG_DB $PG_USER
-}
+# ==============================================================================
+# DATE/TIME UTILITIES 
+# ==============================================================================
 
 function bbc_get_datetime () {
 	init_help_output "$FUNCNAME" "Returns a file-safe datetime timestamp to \
@@ -153,12 +251,9 @@ return $?
 	date "+%s"
 }
 
-function bbc_clear () {
-	init_help_output "$FUNCNAME" "Clears the screen for real and removes any\
-preceeding content." $@ || return $?
-
-	printf "\033c"
-}
+# ==============================================================================
+# I/O UTILITIES 
+# ==============================================================================
 
 function bbc_whereami () {
 	init_help_output "$FUNCNAME" "Returns the location of the current script.\
@@ -189,6 +284,10 @@ filename from given filepath.[1] Path to file." $@ || return $?
 	echo ${filename##*.}
 }
 
+# ==============================================================================
+# STRING UTILITIES 
+# ==============================================================================
+
 function bbc_split_on_pattern () {
 	init_help_output "$FUNCNAME" "Splits a file on a given regex pattern into \
 multiple files.[1] Input file.[2] Regular expression to split file at." \
@@ -210,6 +309,36 @@ with of 70.[1] Input text.[2] Optional line width." \
 	if [ -v $columns ]; then columns=$( bbc_exe "tput cols" ); fi
 	if [ -v $columns ]; then columns=70; fi
 	echo -e "$1" | fold -s -w $columns 
+}
+
+function bbc_remove_duplicate_empty_lines () {
+	init_help_output "$FUNCNAME" "Removes duplicate empty lines read from \
+standard-in." $@ || return $?
+	
+	sed 'N;/^\n$/d;P;D' < /dev/stdin 
+}
+
+function bbc_urlencode () {
+	init_help_output "$FUNCNAME" "URL-enodes the given string.[1] The \
+string to be encoded." $@ || return $?
+
+	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" \
+	-e "s/\\$/%24/g" -e "s/&/%26/g" -e "s/'/%27/g" -e "s/(/%28/g" \
+	-e "s/)/%29/g" -e "s/*/%2A/g" -e "s/+/%2B/g" -e "s/,/%2C/g" \
+	-e "s/\//%2F/g" -e "s/:/%3A/g" -e "s/;/%3B/g" -e "s/=/%3D/g" \
+	-e "s/?/%3F/g" -e "s/@/%40/g" -e "s/\[/%5B/g" -e "s/\]/%5D/g" \
+	-e "s/ /%20/g" 
+}
+
+function bbc_print_xml () {
+	init_help_output "$FUNCNAME" "Pretty-prints an XML string to the command \
+line.[1] XML-file." $@ || return $?
+	
+	bbc_exe tput setaf 2
+	echo
+	xmllint --format $1
+	echo
+	bbc_exe tput sgr 0
 }
 
 # ==============================================================================
@@ -255,7 +384,7 @@ function init_manual () {
 	sed -e "s/^function[ ]*//g" -e "s/ (.*//g" )
 	do
 		eval $fct -h 
-		printf '\n'; printf '=%.0s' {1..70}; printf '\n'
+		printf '\n'; printf '_%.0s' {1..70}; printf '\n'
 	done
 }
 
