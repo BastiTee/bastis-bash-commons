@@ -102,8 +102,10 @@ function bbc_generate_rsa_keypair () {
     init_help_output "$FUNCNAME" "Generates an RSA public and private key pair \
 in the users home folder." $@ || return $?
     
-    [ $( bbc_is_cygwin ) == 1 ] && \
-    targetdir_arg="-f $( cygpath -u ${USERPROFILE}/.ssh )/id_rsa"
+    if [ $( bbc_is_cygwin ) == 1 ]; then
+		mkdir -p ${USERPROFILE}/.ssh
+		targetdir_arg="-f $( cygpath -u ${USERPROFILE}/.ssh )/id_rsa"
+	fi
     ssh-keygen -q -t rsa -b 4096 ${targetdir_arg} -N ''
 }
 
@@ -154,7 +156,7 @@ folder to be packed." $@ || return $?
 # GIT UTILITIES
 # ==============================================================================
 
-function bbc_github_init () {
+function bbc_git_repoinit () {
     init_help_output "$FUNCNAME" "Quick fix to setup a newly cloned github \
 repository with the desired username and email and apply some fixes.[1] \
 Your github username.[2] Your github e-mail address." $@ || return $?
@@ -174,7 +176,9 @@ Your github username.[2] Your github e-mail address." $@ || return $?
 		echo "Maybe you need to fix: http://stackoverflow.com/questions/\
 2643502/git-permission-denied-publickey"
 	fi
-    git pull 
+    echo "If you experience login problems, you might also need to add your \
+public rsa key to github."
+	git pull 
 }
 
 function bbc_git_is_repo () {
