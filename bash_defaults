@@ -70,6 +70,7 @@ if [ ! -v $curr_loc ]; then
 	alias bugs="bbc_bugzilla_cli"
 	alias note="bbc_note"
 	alias clear="bbc_clear"
+	alias szip="bbc_zip"
 fi
 
 # ==============================================================================

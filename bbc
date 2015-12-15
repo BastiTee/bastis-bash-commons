@@ -42,11 +42,26 @@ runs it. This comes in handy if you are unsure whether a tool exists.\
 # PRODUCTIVITY UTILITIES
 # ==============================================================================
 
-function bbc_clear () {
-	init_help_output "$FUNCNAME" "Clears the screen for real and removes any\
-preceeding content." $@ || return $?
+function bbc_zip () {
+	init_help_output "$FUNCNAME" "Straight-forward zipping with mandatory \
+AES-encryption and removal of source file/folder respectively source zip-file.\
+[1] Direction, either (p)ack or (u)npack. [2] Folder/file." \
+$@ || return $?
 
-	printf "\033c"
+    [ -z $( command -v 7z ) ] && { echo "No 7zip installed."; return 1; }
+    direction=p 
+    [ "$1" != "p" ] && [ "$1" != "u" ] && { echo "Bad direction."; return 1; } \
+    || direction="$1" 
+    [ ! -e "$2" ] && { echo "File/folder not readable."; return 1; } 
+
+    if [ "$direction" == "p" ]; then
+        7za a -p -tzip -mem=AES256 "$( basename "$2" ).zip" "$2"
+        [ $? == 0 ] && rm -rf "$2"
+    else
+        7za x "$2"
+        [ $? == 0 ] && rm -rf "$2"
+    fi
+    
 }
 
 function bbc_wd () {
@@ -213,6 +228,13 @@ directory."; return 1; }
 # INTERACTIVITY UTILITIES
 # ==============================================================================
 
+function bbc_clear () {
+	init_help_output "$FUNCNAME" "Clears the screen for real and removes any\
+preceeding content." $@ || return $?
+
+	printf "\033c"
+}
+
 function bbc_askpass () {
 	init_help_output "$FUNCNAME" "Asks the user for a password.[1] Optional \
 alternate question, e.g. \"Enter your google.com password\"." $@ || return $?
@@ -377,9 +399,9 @@ function init_help_output () {
 		help_string="${help_string} ${fga}${arg_string}${rs}\n\n${function_help}"
 		# print help string 
 		bbc_justify_text "$help_string" 70
-		return 1
-	else
-		return 0
+        return 1
+    else
+        return 0
 	fi
 }
 
