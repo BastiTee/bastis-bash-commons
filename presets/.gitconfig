@@ -1,0 +1,57 @@
+; BASTI's .GITCONFIG
+; ==================
+; Reminder: Don't use global user, when using multiple git accounts  
+
+[push]
+	default = matching
+	
+[core]
+	trustctime = false
+	editor = vim
+	filemode = false
+	autocrlf = false
+	bare = false
+	preloadindex = true
+	fscache = true
+	
+[http]
+	sslverify = false
+	
+[color]
+	ui = true
+	
+[credential]
+	helper = cache --timeout=3600
+	
+[alias]
+	cp = cherry-pick
+	co = checkout
+	cl = clone
+	ci = commit
+	st = status -sb
+	br = branch
+
+[merge]
+    tool = winmerge
+
+[mergetool "winmerge"]
+    name = WinMerge
+    cmd = "$PROGRAMFILES/WinMerge/WinMergeU.exe" -u -e -dl \"Local\" -dr \"Remote\" $LOCAL $REMOTE $MERGED
+    prompt = false
+    trustExitCode = true
+    keepBackup = false
+    keepTemporaries = false
+	
+[diff]
+    tool = winmerge
+
+[difftool "winmerge"]
+    name = WinMerge
+	cmd = "$PROGRAMFILES/WinMerge/WinMergeU.exe" -u -e \"$LOCAL\" \"$REMOTE\"
+    prompt = false
+    trustExitCode = true
+    keepBackup = false
+    keepTemporaries = false
+
+[gc]
+	auto = 256

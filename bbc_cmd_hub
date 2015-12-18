@@ -1,0 +1,113 @@
+# ==============================================================================
+# COMMAND HUB
+# A tool to automatically create a selection interface from a list of commands.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+function show_help () {
+	echo -e "Create a selection interface from a list of commands."
+	echo -e "\nUsage: `basename $0` [-i <CMD_FILE>] [-c <CMD_LIST>] \
+[-t <HEADER_FILE>]\n"
+	echo -e "\t-i <CMD_FILE>\t\tInput file holding bash commands."
+    echo -e "\t-c <CMD_LIST>\t\tInput command generating list entries."
+	echo -e "\t-t <HEADER_FILE>\tAn optional file holding a header \
+to be printed."
+    echo 
+    echo -e "Note that either -i or -c must be set."
+    echo 
+	exit 1
+}
+
+# setup temp files and ensure deletion on exit 
+tmplist=$( mktemp )
+strippedlist=$( mktemp )
+function cleanup () {
+    rm -f $tmplist $strippedlist
+}
+trap cleanup EXIT SIGTERM
+
+# setup coloring if tput available 
+hl=
+rs=
+if [ ! -z $( command -v tput ) ]; then
+    hl=$( tput setaf 7; tput setab 4; )
+    rs=$( tput sgr0 )
+fi
+
+# parse cmd line 
+while getopts "hi:t:c:" opt; do
+    case "$opt" in
+    i)
+        INFILE="$OPTARG"
+        ;;
+	t)  HFILE="$OPTARG"
+		;;
+    c)  CMDLIST="$OPTARG"
+        ;;
+	h)  show_help
+		;;
+	*)	echo "Illegal argument."; show_help
+		;;
+	esac
+done
+
+# check settings 
+[ -z "$INFILE" ] && [ -z "$CMDLIST" ] && { echo "No input."; show_help; }
+[ ! -z "$INFILE" ] && [ ! -e "$INFILE" ] && { 
+echo "Input file does not exist."; show_help; }
+
+# ==============================================================================
+# MAIN PROCESSING 
+# ==============================================================================
+
+[ ! -z "$INFILE" ] && cat "$INFILE" >> $tmplist # add cmds from file 
+[ ! -z "$CMDLIST" ] && eval "$CMDLIST" >> $tmplist # add cmds from command 
+
+# strip away leading characters that are equal to all commands 
+awk 'NR==1{
+       pos=split($0,a,"")
+ }
+ NR==FNR{
+      split($0,b,"")
+      for(i=1;i<=pos;i++)
+         if(b[i]!=a[i]){
+            pos=i
+            break
+       }
+       next
+    }
+NR!=FNR{
+   print substr($0,pos)
+}' $tmplist $tmplist > $strippedlist 
+
+printf "\033c"
+[ ! -z "$HFILE" ] && { cat $HFILE; echo ""; }
+
+i=1
+ARRAY=()
+while read line
+do 
+    if [ ! -z "$line" ]
+    then
+        printf "$hl[%03s%s]$rs\t${line:$substart}\n" $i
+        ARRAY[$i]=$line 
+        i=$(($i + 1))
+    fi
+done < "$strippedlist"
+echo 
+echo -n "Enter selection: "
+read -r -e -n 2 selection
+echo 
+sel_line=${ARRAY[$selection]}
+if [ -z "$sel_line" ]
+then
+    echo "Invalid selection"
+    exit 1
+fi
+jump=$( echo $sel_line )
+
+printf "\033c"
+
+echo "Calling command: $jump"
+eval $jump
