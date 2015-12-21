@@ -135,7 +135,7 @@ escaped quotation marks." $@ || return $?
 }
 
 function bbc_archive () {
-	init_help_output "$FUNCNAME" "Packs the given folder to a tar-gz archive \
+	init_help_output "$FUNCNAME" "Packs the given folder to a zip archive \
 and removes the source folder on successful packaging. Optionally you can set \
 a 'BBC_ARCHIVE_FOLDER' pointing to your desired archive folder.[1] Source \
 folder to be packed." $@ || return $?
@@ -146,15 +146,19 @@ folder to be packed." $@ || return $?
     [ -z "$1" ] && { echo "No folder provided."; return 1; }
     datetime=$( bbc_get_datetime )
 
-    fulldir=$( readlink -f $1 )
+    fulldir=$( readlink -f "$1" )
+    [ ! -d "$fulldir" ] && { echo "Given path is not a directory"; return 1; }
     basename=$( basename $fulldir )
-    trgfile=${target_folder}/${datetime}_${basename}.tar.gz
+    trgfile=${datetime}_${basename}.zip
 
-    echo -e "You want to pack '$fulldir' to '$trgfile' and remove source folder."
+    echo -e "You want to pack '$fulldir' to '${target_folder}/$trgfile' and remove source folder."
     yes=$( bbc_yesno "Are you sure?" )
-
     [ $yes != 1 ] && { echo; return 0; }
-    tar -zcvf ${trgfile} -C $1 .
+    
+    cd $fulldir
+    zip -9r ${trgfile} *
+    mv ${trgfile} ${target_folder}
+    cd -
     if [ -e ${trgfile} ] && [ $( tar -xOf ${trgfile} > /dev/null; echo $? ) == 0 ]
     then
       echo -e "\nPacking successful. Will remove source folder."
@@ -191,9 +195,10 @@ Your github username.[2] Your github e-mail address." $@ || return $?
 		echo "Maybe you need to fix: http://stackoverflow.com/questions/\
 2643502/git-permission-denied-publickey"
 	fi
-    echo "If you experience login problems, you might also need to add your \
-public rsa key to github."
-	git pull 
+	echo "Running 'git pull -r' now. If you experience login problems, you \
+might also need to add your public rsa key to github."
+    git pull -r
+    
 }
 
 function bbc_git_is_repo () {

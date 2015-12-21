@@ -61,8 +61,10 @@ echo "Input file does not exist."; show_help; }
 # MAIN PROCESSING 
 # ==============================================================================
 
-[ ! -z "$INFILE" ] && cat "$INFILE" >> $tmplist # add cmds from file 
-[ ! -z "$CMDLIST" ] && eval "$CMDLIST" >> $tmplist # add cmds from command 
+[ ! -z "$INFILE" ] && cat "$INFILE" | grep -v -e "^[[:space:]]$" \
+>> $tmplist # add cmds from file 
+[ ! -z "$CMDLIST" ] && eval "$CMDLIST" | grep -v -e "^[[:space:]]$" \
+>> $tmplist # add cmds from command 
 
 # strip away leading characters that are equal to all commands 
 awk 'NR==1{
@@ -88,12 +90,9 @@ i=1
 ARRAY=()
 while read line
 do 
-    if [ ! -z "$line" ]
-    then
-        printf "$hl[%03s%s]$rs\t${line:$substart}\n" $i
-        ARRAY[$i]=$line 
-        i=$(($i + 1))
-    fi
+    printf "$hl[%03s%s]$rs\t${line}\n" $i
+    ARRAY[$i]=$( sed "${i}q;d" $tmplist )
+    i=$(($i + 1))
 done < "$strippedlist"
 echo 
 echo -n "Enter selection: "
