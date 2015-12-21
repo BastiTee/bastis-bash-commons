@@ -84,21 +84,20 @@ NR!=FNR{
 }' $tmplist $tmplist > $strippedlist 
 
 printf "\033c"
-[ ! -z "$HFILE" ] && { cat $HFILE; echo ""; }
+[ ! -z "$HFILE" ] && { cat $HFILE; echo ""; } # header if available 
 
 i=1
-ARRAY=()
+mapfile -t ARRAY < $tmplist
 while read line
 do 
     printf "$hl[%03s%s]$rs\t${line}\n" $i
-    ARRAY[$i]=$( sed "${i}q;d" $tmplist )
     i=$(($i + 1))
 done < "$strippedlist"
 echo 
 echo -n "Enter selection: "
 read -r -e -n 2 selection
 echo 
-sel_line=${ARRAY[$selection]}
+sel_line=${ARRAY[$(( $selection - 1 ))]}
 if [ -z "$sel_line" ]
 then
     echo "Invalid selection"
