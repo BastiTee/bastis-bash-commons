@@ -299,6 +299,14 @@ return $?
 # I/O UTILITIES 
 # ==============================================================================
 
+function bbc_find_leaf_dirs () {
+	init_help_output "$FUNCNAME" "Returns all folder names that don't have any \
+subfolders of their own.[1] Path to directory." $@ || return $?
+
+	[ -z "${1}" ] || [ ! -e "${1}" ] && { echo "No or unknown folder."; return;}
+	find "${1}" -type d -exec sh -c '(ls -p "{}"|grep />/dev/null)||echo "{}"' \;
+}
+
 function bbc_whereami () {
 	init_help_output "$FUNCNAME" "Returns the location of the current script.\
 [1] If '-d' then return parent dirname only."\
