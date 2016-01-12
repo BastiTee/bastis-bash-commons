@@ -52,6 +52,11 @@ while getopts "hi:t:c:" opt; do
 	esac
 done
 
+# check if there is a remaining argument 
+shift $(expr $OPTIND - 1 )
+# if it's a number use it as preselection 
+[ $# -gt 0 ] && [[ "$1" =~ ^[0-9]+$ ]] && PRESELECTION="$1"
+
 # check settings 
 [ -z "$INFILE" ] && [ -z "$CMDLIST" ] && { echo "No input."; show_help; }
 [ ! -z "$INFILE" ] && [ ! -e "$INFILE" ] && { 
@@ -93,11 +98,23 @@ do
     printf "$hl[%03s%s]$rs\t${line}\n" $i
     i=$(($i + 1))
 done < "$strippedlist"
-echo 
-echo -n "Enter selection: "
-read -r -e -n 2 selection
-echo 
+
+# if there is a preselection, just run it ..
+if [ ! -z $PRESELECTION ]
+then
+    selection=$PRESELECTION
+else    
+    # .. otherwise let user select
+    echo 
+    echo -n "Enter selection: "
+    read -r -e -n 2 selection
+    echo 
+    
+fi
 sel_line=${ARRAY[$(( $selection - 1 ))]}
+
+#echo "$selection = $sel_line"; sleep 3; # debug
+
 if [ -z "$sel_line" ]
 then
     echo "Invalid selection"

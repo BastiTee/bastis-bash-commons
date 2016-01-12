@@ -1,9 +1,36 @@
 /** 
-WHATSAPP STYLE FOR USE WITH https://chrome.google.com/webstore/detail/stylish/fjnbnpbmkenffdnngjfgmeleoegfcffe?hl=de
+ __    __  __ __   ____  ______  _____  ____  ____  ____    
+|  T__T  T|  T  T /    T|      T/ ___/ /    T|    \|    \   
+|  |  |  ||  l  |Y  o  ||      (   \_ Y  o  ||  o  )  o  )  
+|  |  |  ||  _  ||     |l_j  l_j\__  T|     ||   _/|   _/   
+l  `  '  !|  |  ||  _  |  |  |  /  \ ||  _  ||  |  |  |     
+ \      / |  |  ||  |  |  |  |  \    ||  |  ||  |  |  |     
+  \_/\_/  l__j__jl__j__j  l__j   \___jl__j__jl__j  l__j     
+                                                            
+    __   ___   ____    _____  ___   _        ___            
+   /  ] /   \ |    \  / ___/ /   \ | T      /  _]           
+  /  / Y     Y|  _  Y(   \_ Y     Y| |     /  [_            
+ /  /  |  O  ||  |  | \__  T|  O  || l___ Y    _]           
+/   \_ |     ||  |  | /  \ ||     ||     T|   [_            
+\     |l     !|  |  | \    |l     !|     ||     T           
+ \____j \___/ l__j__j  \___j \___/ l_____jl_____j           
+                                                            
+    __ _____ _____        _____ ______  __ __  _        ___ 
+   /  ] ___// ___/       / ___/|      T|  T  T| T      /  _]
+  /  (   \_(   \_  _____(   \_ |      ||  |  || |     /  [_ 
+ /  / \__  T\__  T|     |\__  Tl_j  l_j|  ~  || l___ Y    _]
+/   \_/  \ |/  \ |l_____j/  \ |  |  |  l___, ||     T|   [_ 
+\     \    |\    |       \    |  |  |  |     !|     ||     T
+ \____j\___j \___j        \___j  l__j  l____/ l_____jl_____j
+                                                            
+A CSS-stylish style for plain-old b/w chat whatsapp.
 
-*/ 
+Thanks to the awesome Stylish browser-plugin:
+https://chrome.google.com/webstore/detail/stylish/fjnbnpbmkenffdnngjfgmeleoegfcffe?hl=de
 
-/** Page-wide styles */
+*/
+
+/* Page-wide styles */
 body *
 {
 	font-family: Consolas, monaco, monospace;
@@ -54,8 +81,8 @@ body *
 }
 .drawer-container-right, .pane-chat, .pane-intro
 {
-	left: 310px;
-	width: 500px;
+	left: 0px;
+	width: 450px;
 }
 .drawer-container-left, .pane-list
 {
@@ -87,9 +114,9 @@ body *
 {
 	color: #777 !important;
 }
-
-
-
+.link-preview-container {
+	display: none;	
+}
 .message-system-body
 {
 	background-color: #f1f1f1;
@@ -153,13 +180,10 @@ body *
 }
 .image-thumb img
 {
-	height: 1px !important;
+	background-color: aliceblue;
+	height: 10px !important;
 	padding: 10px !important;
 	width: 1px !important;
-}
-.image-thumb .shade
-{
-	display: none;
 }
 .media-state-controls
 {
@@ -181,11 +205,8 @@ body *
 .message-out:before
 {
 	background: none !important;
+} 
+.emojitext img {
+	display:none;
 }
-
-  
-  .emojitext img {
-      display:none;
-
-    }
-
+/* fin */
