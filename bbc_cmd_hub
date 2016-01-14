@@ -120,9 +120,9 @@ then
     echo "Invalid selection"
     exit 1
 fi
-jump=$( echo $sel_line )
+jump=$( echo "$sel_line" | sed -e "s/&/\\\\&/g" ) # escape & 
 
 printf "\033c"
 
 echo "Calling command: $jump"
-eval $jump
+eval "$jump"
