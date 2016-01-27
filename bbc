@@ -211,18 +211,20 @@ repository folder." $@ || return $?
 function bbc_git_author_contributions () {
     init_help_output "$FUNCNAME" "Checks for line/code changes of the given \
 author and outputs some summarized statistics.[1] Username (can be a pattern).\
-[2] Since-date, e.g., 01.12.2015." $@ || return $?
+[2] Since-date, e.g., 01.12.2015.[3] File pattern (optional, all if \
+ommitted)." $@ || return $?
 
     [ "$( bbc_git_is_repo )" != "1" ] && { echo "You're not inside a git repo \
 directory."; return 1; }
     [ -z "$1" ] && { echo "Author name must be set."; return 1; }
     since="1.weeks"
     [ ! -z "$2" ] && since="$2"
+    [ -z "$3" ] && pattern="" || pattern="$3"
     
     git_base="git --no-pager log --no-merges --since=${since} --all \
-    --not origin/rel12v0 --author=$1"
-    eval $git_base --oneline
-    eval $git_base --numstat --pretty="" | awk \
+    --not origin/rel12v0 --author=$1 "
+    eval $git_base --oneline "$pattern"
+    eval $git_base --numstat --pretty="" "$pattern" | awk \
     'BEGIN { ins=0; del=0; files=0; } \
     { files+=1; ins+=$1; del+=$2; } \
      END {print "== "ins" insertions, "del" deletions, "files" files changed." }'
