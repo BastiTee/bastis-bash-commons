@@ -253,7 +253,9 @@ function load_table () {
 	curl -k 2>/dev/null "$1" >> ${TEMP_FILES[0]}
 	subj_width=$(( $WIN_WIDTH - 5 -3 - 3 -3 - 3 -3 - 10 ))
 	
-	tail -n +2 "${TEMP_FILES[0]}" | sed -r -e "s/\",\"/${fs}/g" \
+	tail -n +2 "${TEMP_FILES[0]}" | sed -r \
+    -e "s/^([0-9]+),-,/\1,\"Bug\",/g" \
+    -e "s/\",\"/${fs}/g" \
 	-e "s/,\"+/${fs}/g" -e "s/\"+,/${fs}/g" \
 	-e "s/^\"//g" -e "s/\"$//g" | awk -F${fs} -v highlight_1=$highlight_1 \
 	-v res=$res -v highlight_2=$highlight_2 -v sep=${fs} \
@@ -266,7 +268,7 @@ function load_table () {
 	cat ${TEMP_FILES[1]} | grep -v -e "bug_id" |\
 	$CTABLE -s ${fs} -c "| " > ${TEMP_FILES[2]}
 	
-	#cat ${TEMP_FILES[1]} > ${TEMP_FILES[2]} # debug
+	# cat ${TEMP_FILES[1]} > ${TEMP_FILES[2]} # debug
 }
 
 function load_bug () {
