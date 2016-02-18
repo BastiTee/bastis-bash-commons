@@ -71,6 +71,7 @@ if [ ! -v $curr_loc ]; then
 	alias note="bbc_note"
 	alias clear="bbc_clear"
 	alias szip="bbc_zip"
+    alias c="bbc_calc"
 fi
 
 # ==============================================================================

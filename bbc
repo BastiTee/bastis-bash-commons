@@ -42,6 +42,17 @@ runs it. This comes in handy if you are unsure whether a tool exists.\
 # PRODUCTIVITY UTILITIES
 # ==============================================================================
 
+function bbc_calc () {
+    	init_help_output "$FUNCNAME" "A convenience wrapper for bc. [1] .. [n] \
+The arithmetical problem you want to solve." \
+$@ || return $?
+
+    [ $# -le 0 ] && { echo "No bc-compatible calculation provided."; return 1; }
+    calculate=$( sed -e "s/,/./g" <<< "$@" )
+    echo "scale=4; ${calculate}" | bc
+}
+
+
 function bbc_zip () {
 	init_help_output "$FUNCNAME" "Straight-forward zipping with mandatory \
 AES-encryption and removal of source file/folder respectively source zip-file.\
