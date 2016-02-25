@@ -236,10 +236,10 @@ emailcc1=1"
 	if [ ! -z $bug_query ] && [ $ext_query == 0 ]; then
 		input_url="${input_url}&\
 short_desc=${bug_query}&\
-short_desc_type=allwordssubstr"
+short_desc_type=regexp"
 	elif [ ! -z $bug_query ] && [ $ext_query == 1 ]; then
 		input_url="${input_url}&longdesc=${bug_query}&\
-longdesc_type=allwordssubstr"
+longdesc_type=regexp"
 	fi
 
 	echo $input_url
