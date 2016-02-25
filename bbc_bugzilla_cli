@@ -55,7 +55,7 @@ highlight_1=""
 highlight_2=""
 res=""
 # last command line (not constant)
-cmd_line= 
+cmd_line=
 
 #= MAIN PROGRAM LOOP ===========================================================
 
@@ -81,8 +81,15 @@ and colorful!"; sleep 3; }
 			first_pass=0
 		else 
 			#===================================================================
-			if [ $in_bug_view == 1 ] && [ "$cmd_line" == "o" ]; then
-				open_browser $last_bugid
+			if [ $in_bug_view == 0 ] && [ "$cmd_line" == "b" ]; then
+                [ -z "$last_input_url" ] && display_help "No recent queries..."\
+                || open_browser "$( sed -e "s/&ctype=csv//g" <<< $last_input_url)"
+			#===================================================================
+			elif [ $in_bug_view == 1 ] && [ "$cmd_line" == "b" ]; then
+				display_help "You are not in table view!"
+            #===================================================================
+			elif [ $in_bug_view == 1 ] && [ "$cmd_line" == "o" ]; then
+				open_browser "${BUG_BASE_URL}$last_bugid"
 				clear_display
 				cat ${TEMP_FILES[4]}
 			#===================================================================
@@ -98,7 +105,7 @@ and colorful!"; sleep 3; }
 				display_help "You are not in bug view!"
 			#===================================================================
 			elif [[ "$cmd_line" =~ o[0-9]+ ]]; then
-				open_browser $( tr -d "o" <<< $cmd_line )
+				open_browser "${BUG_BASE_URL}$( tr -d "o" <<< $cmd_line )"
 				clear_display
 				cat ${TEMP_FILES[2]} # prints the current table
 			#===================================================================
@@ -111,10 +118,9 @@ and colorful!"; sleep 3; }
 				display_help "You are not in bug view!"
 			#===================================================================
 			elif [[ "$cmd_line" =~ ^[0-9]+$ ]]; then
-				#if [ "$cmd_line" != "$last_bugid" ]; then
-					display_help "Loading bug details... "
-					load_bug $cmd_line > ${TEMP_FILES[4]}
-				#fi
+	
+                display_help "Loading bug details... "
+                load_bug $cmd_line > ${TEMP_FILES[4]}
 				clear_display
 				cat ${TEMP_FILES[4]} # prints the current bug 
 				last_bugid=$cmd_line
@@ -126,6 +132,7 @@ and colorful!"; sleep 3; }
 				display_help "Loading bug table..."
 				debug_input "${input_url}"
 				load_table "$input_url"
+                last_input_url="$input_url"
 				clear_display
 				cat ${TEMP_FILES[2]} # prints the current table 
 			#===================================================================
@@ -133,7 +140,6 @@ and colorful!"; sleep 3; }
 				clear_display
 				cat ${TEMP_FILES[5]}
 				read # wait for key input 
-				# return to last page
 				clear_display			
 				if [ $in_bug_view == 1 ]; then
 					cat ${TEMP_FILES[4]} # prints the current bug 
@@ -196,7 +202,7 @@ function load_prerequisites () {
 	first_pass=1 # to avoid error message on first "empty command" 
 	in_bug_view=0 # toggle to save current view 
 	last_bugid= # last bug view that was opened 
-	
+	last_input_url= # last used input url 
 	create_help >> ${TEMP_FILES[5]}
 }
 
@@ -404,11 +410,10 @@ function find_browser () {
 
 function open_browser () {
 	[ -z $1 ] && return
-	target="${BUG_BASE_URL}$1"
 	if [[ "$BROSER" =~ .*[cC]hrome.* ]]; then
-		"$BROWSER" /new-tab $target 2>/dev/null
+		"$BROWSER" /new-tab $1 2>/dev/null &
 	else 
-		"$BROWSER" $target
+		"$BROWSER" $1 &
 	fi
 }
 
@@ -423,10 +428,13 @@ function cleanup () {
 }
 
 function reset_tempfiles () {
-	for i in $( seq 0 $(( ${#TEMP_FILES[@]} -2 )) )
-	do
-		echo "" > ${TEMP_FILES[$i]}
-	done
+    echo "" > ${TEMP_FILES[0]} # table curl response
+    echo "" > ${TEMP_FILES[1]} # table csv reformat
+    echo "" > ${TEMP_FILES[2]} # table in final form
+    echo "" > ${TEMP_FILES[3]} # bug curl response
+    echo "" > ${TEMP_FILES[4]} # bug in final form
+    #echo "" > ${TEMP_FILES[5]} # help 
+    #echo "" > ${TEMP_FILES[6]} # touched files
 }
 
 #= USER HELP ===================================================================
@@ -435,7 +443,8 @@ function create_help () {
 echo -e "\n$( highlight_2 "TABLE VIEW:" )\n"
 echo -e " $( highlight_1 o )<BUGID> - Open bug with id <BUGID> in browser."
 echo -e " $( highlight_1 s ) OPTS.. - Start search with options or"
-echo -e "            default parameters.\n"
+echo -e "            default parameters."
+echo -e " $( highlight_1 b )        - Open last search in browser.\n"
 echo -e "   Options:\n"
 echo -e "   $( highlight_1 /u )<USER>  - Search by user."
 echo -e "   $( highlight_1 /q )<QUERY> - Search by query in summaries."
