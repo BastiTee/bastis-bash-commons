@@ -135,13 +135,18 @@ mkdir -p $TEMPF
 if [ $RECODE_ONLY == 0 ]
 then
 
+	no_files=$( ls $INPUT_PATTERN | wc -l )
+	echo "found $no_files input files."
+	[ $no_files == 0 ] && exit 1
+
 	# get image properties
 	echo "reading source image properties..."
-	if [ ! -e ${IMG_PROPS} ] || [ $OVERWRITE == 1 ]
+	
+	if [ ! -e ${IMG_PROPS} ] || [ $OVERWRITE == 1 ] || [ $( stat --printf="%s" $IMG_PROPS ) == 0 ]
 	then
 		$BIN_IDENTIFY -format '%f %w %h %x %y %[EXIF:Orientation]\n' $INPUT_PATTERN > ${IMG_PROPS}
 	fi
-
+	
 	echo "checking source image properties..."
 
 	# make sure that we only have one type of image dimension 
