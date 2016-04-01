@@ -230,11 +230,11 @@ directory."; return 1; }
     [ -z "$1" ] && { echo "Author name must be set."; return 1; }
     since="1.weeks"
     [ ! -z "$2" ] && since="$2"
-    [ -z "$3" ] && pattern="" || pattern="$3"
+    [ -z "$3" ] && pattern="" || pattern="-- $3"    
     
     git_base="git --no-pager log --no-merges --since=${since} --all \
     --not origin/rel12v0 --author=$1 "
-    eval $git_base --oneline "$pattern"
+    eval $git_base --oneline $pattern
     eval $git_base --numstat --pretty="" "$pattern" | awk \
     'BEGIN { ins=0; del=0; files=0; } \
     { files+=1; ins+=$1; del+=$2; } \

@@ -27,3 +27,5 @@ fallback
 unfiltered
 severes
 webservice
+umlauts
+catched
