@@ -386,7 +386,7 @@ function bbc_print_xml () {
 	init_help_output "$FUNCNAME" "Pretty-prints an XML string to the command \
 line.[1] XML-file." $@ || return $?
 	
-	bbc_exe tput setaf 2
+	bbc_exe tput setaf 1
 	echo
 	xmllint --format $1
 	echo

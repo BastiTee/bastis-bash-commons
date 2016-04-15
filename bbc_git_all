@@ -1,0 +1,19 @@
+#!/bin/bash
+# ==============================================================================
+# GIT ALL (BASTI's BASH COMMONS)
+# A simple wrapper to invoke a git command on any git repository in a 
+# child folder (non-recursive). 
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+[ $# == 0 ] && { echo "No git argument provided."; exit 1; }
+
+for dir in $( find -maxdepth 2 -type d -name ".git" )
+do
+    dir=$( basename $( dirname $dir ) )
+    echo -e "\n-----------------\n$dir\n-----------------" 
+    cd $dir
+    git $@
+    cd ..
+done
