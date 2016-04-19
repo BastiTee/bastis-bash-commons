@@ -236,10 +236,9 @@ directory."; return 1; }
     --not origin/rel12v0 --author=$1 "
     eval $git_base --oneline $pattern
     eval $git_base --numstat --pretty="" "$pattern" | awk \
-    'BEGIN { ins=0; del=0; files=0; } \
-    { files+=1; ins+=$1; del+=$2; } \
-     END {print "== "ins" insertions, "del" deletions, "files" files changed." }'
-    
+    'BEGIN { ins=0; del=0; tot=0; files=0; } \
+    { files+=1; ins+=$1; del+=$2; tot=tot+$1-$2; } \
+     END {print "== LOC_INSERTED: "ins" LOC_DELETED: "del" LOC_SUM: "tot" FILES: "files }'
 }
 
 # ==============================================================================
