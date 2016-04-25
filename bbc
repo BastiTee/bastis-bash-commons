@@ -52,6 +52,20 @@ $@ || return $?
     echo "scale=4; ${calculate}" | bc
 }
 
+function bbc_days_between () {
+	init_help_output "$FUNCNAME" "Calculates the time between two given dates \
+in the form YYYY-MM-DD and with the second date included in the calculation.\
+[1] First date. [2] Second date (optional, default: today)." \
+$@ || return $?
+
+    [ $# -le 0 ] && { echo "You must set at least one date."; return 1; }
+    
+    ep1=$( date --date "$1" +%s )
+    [ -v $2 ] && ep2=$( date +%s ) || ep2=$( date --date "$2" +%s )
+    diffEp=$(( $ep2 - $ep1 ))
+    bbc_calc "$diffEp / 60 / 60 / 24"     
+    
+}
 
 function bbc_zip () {
 	init_help_output "$FUNCNAME" "Straight-forward zipping with mandatory \
