@@ -89,6 +89,20 @@ $@ || return $?
     
 }
 
+function bbc_zip_subfolders() {
+    init_help_output "$FUNCNAME" "Zips the content of all immediate sub-\
+directories to ZIP-files with the same name." $@ || return $?
+       
+    find -maxdepth 1 -type d ! -name "." | while read dir;
+    do
+        bname=$( basename $dir )
+        echo "=== ZIPPING $bname"
+        cd $dir
+        zip -r ../${bname}.zip *
+        cd ..
+    done
+}
+
 function bbc_wd () {
 	init_help_output "$FUNCNAME" "An extension of the system's default cd \
 command with pattern-based searching of candidates before changing to the \
