@@ -53,7 +53,7 @@ alias l="ll"
 alias ..="cd .."
 alias ...="cd ../../"
 # find pattern in code 
-alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar"
+alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --exclude-dir=bin"
 
 # Find out location of sourced default file ..
 curr_loc=${BASH_SOURCE[0]}

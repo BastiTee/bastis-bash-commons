@@ -179,14 +179,15 @@ and removes the source folder on successful packaging. Optionally you can set \
 a 'BBC_ARCHIVE_FOLDER' pointing to your desired archive folder.[1] Source \
 folder to be packed." $@ || return $?
 
+    [ -z "$1" ] && { echo "No folder provided."; return 1; }
+    fulldir=$( readlink -f "$1" )
+    [ ! -d "$fulldir" ] && { echo "Given path is not a directory"; return 1; }
+    
     target_folder="."
     [ ! -z $BBC_ARCHIVE_FOLDER ] && target_folder=$BBC_ARCHIVE_FOLDER
     target_folder=$( readlink -f $target_folder )
-    [ -z "$1" ] && { echo "No folder provided."; return 1; }
+    
     datetime=$( bbc_get_datetime )
-
-    fulldir=$( readlink -f "$1" )
-    [ ! -d "$fulldir" ] && { echo "Given path is not a directory"; return 1; }
     basename=$( basename $fulldir )
     trgfile=${datetime}_${basename}.zip
 
@@ -198,15 +199,16 @@ folder to be packed." $@ || return $?
     zip -9r ${trgfile} *
     mv ${trgfile} ${target_folder}
     cd -
-    if [ -e ${trgfile} ] && [ $( tar -xOf ${trgfile} > /dev/null; echo $? ) == 0 ]
+    if [ -e "${target_folder}/${trgfile}" ] && [ $( unzip -t \
+    "${target_folder}/${trgfile}" > /dev/null; echo $? ) == 0 ]
     then
       echo -e "\nPacking successful. Will remove source folder."
-      rm -rf $fulldir
+      arm -rf $fulldir
     else
       echo -e "\nError while packing. Source folder not deleted."
       return 1
     fi
-    echo -e "Done."
+    echo -e "Done. ${target_folder}/${trgfile}"
     return 0
 }
 
