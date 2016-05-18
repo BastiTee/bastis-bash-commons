@@ -27,7 +27,7 @@ function process_GET () {
 	extract_query_parameters $@
 	extract_path_parameters $@
 	write_200_OK_header
-	write_webpage_prefix "bbc_webserver" "GET" "monospace"
+	write_webpage_prefix "bbc-webserver" "GET" "monospace"
 	print_query_parameters
 	print_path_parameters
 	write_webpage_suffix
@@ -35,7 +35,7 @@ function process_GET () {
 
 function process_POST () {
 	write_200_OK_header
-	write_webpage_prefix "bbc_webserver" "POST" "monospace"
+	write_webpage_prefix "bbc-webserver" "POST" "monospace"
 	print_query_parameters
 	print_path_parameters
 	write_webpage_suffix
@@ -151,7 +151,7 @@ function urlencode () {
 # MAIN SERVER LOOP
 ###############################################################################
 
-function bbc_start_server () {
+function bbc-start-server () {
 
 	if [ $# -le 0 ]; then echo "No server port set."; return 1; fi
 	SERVER_PORT=$1

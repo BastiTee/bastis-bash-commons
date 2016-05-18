@@ -63,15 +63,15 @@ if [ ! -v $curr_loc ]; then
 	source ${curr_loc}/bbc 
 	echo "Sourcing basti's bash commons functions successful."
 	# Aliases for quickly accessing commons functions 
-	alias cd="bbc_wd"
-	alias table="bbc_table" 
-	alias timeout="bbc_timeout"
-	alias fakename="bbc_fakename"
-	alias bugs="bbc_bugzilla_cli"
-	alias note="bbc_note"
-	alias clear="bbc_clear"
-	alias szip="bbc_zip"
-    alias c="bbc_calc"
+	alias cd="bbc-wd"
+	alias table="bbc-table" 
+	alias timeout="bbc-timeout"
+	alias fakename="bbc-fakename"
+	alias bugs="bbc-bugzilla-cli"
+	alias note="bbc-note"
+	alias clear="bbc-clear"
+	alias szip="bbc-zip"
+    alias c="bbc-calc"
 fi
 
 # ==============================================================================

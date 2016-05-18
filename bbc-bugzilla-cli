@@ -26,17 +26,17 @@ BUG_BASE_URL="${bz_url}/show_bug.cgi?id="
 # parameter suffix to display more bug states 
 BUG_STATE_EXTEN="bug_status=RESOLVED&"
 BUG_STATE_ALL="bug_status=UNCONFIRMED&bug_status=VERIFIED&bug_status=CLOSED&"
-# Default bbc_table command
-CTABLE="bbc_table"
+# Default bbc-table command
+CTABLE="bbc-table"
 # Default limit for search results 
 LIMIT=20
 # Default presets file 
 PRESET_FILE=".bugzillaclirc"
 # Array that holds all temporary files 
 declare -a TEMP_FILES
-# Source file of bbc_table
+# Source file of bbc-table
 TABLE_SRC="https://raw.githubusercontent.com/BastiTee/\
-bastis-bash-commons/master/bbc_table"
+bastis-bash-commons/master/bbc-table"
 # window width - with tput available this will be adapted dynamically 
 WIN_WIDTH=100
 # color for bug ids/keys and bugstates/assignee 
@@ -174,12 +174,12 @@ function load_prerequisites () {
 		done < ~/$PRESET_FILE
 	fi
 	
-	# check for bbc_table and if necessary load from github
-	CTABLE="bbc_table"
+	# check for bbc-table and if necessary load from github
+	CTABLE="bbc-table"
 	prereq=$( command -v $CTABLE )
 	if [ -z $prereq ]; then
-		curl -s -o bbc_table $TABLE_SRC
-		CTABLE="./bbc_table"
+		curl -s -o bbc-table $TABLE_SRC
+		CTABLE="./bbc-table"
 	fi
 
 	# search for browser 

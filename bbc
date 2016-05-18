@@ -13,24 +13,24 @@
 # ENVIRONMENT UTILITIES
 # ==============================================================================
 
-function bbc_is_cygwin () {
-	init_help_output "$FUNCNAME" "Returs 1 if this script runs in a cygwin \
+function bbc-is-cygwin () {
+	init-help-output "$FUNCNAME" "Returs 1 if this script runs in a cygwin \
 environment and 0 if not." $@ || return $?
 
 	[ -z "$( uname -a | grep -i "cygwin" )"/ ] && echo 0 || echo 1 
     
 }
 
-function bbc_get_bash_version () {
-	init_help_output "$FUNCNAME" "Returns the bash version as separated string \
+function bbc-get-bash-version () {
+	init-help-output "$FUNCNAME" "Returns the bash version as separated string \
 to check for compatibility." $@ || return $?
 
 	bash --version | head -n1 | sed -r -e "s/^[^0-9]+([0-9\\.]+).*/\1/g" |\
 	tr "." " "
 }
 
-function bbc_exe () {
-	init_help_output "$FUNCNAME" "Tests if a command does exist and, if yes, \
+function bbc-exe () {
+	init-help-output "$FUNCNAME" "Tests if a command does exist and, if yes, \
 runs it. This comes in handy if you are unsure whether a tool exists.\
 [1] Command to be executed." $@ || return $?
 	
@@ -42,8 +42,8 @@ runs it. This comes in handy if you are unsure whether a tool exists.\
 # PRODUCTIVITY UTILITIES
 # ==============================================================================
 
-function bbc_calc () {
-    	init_help_output "$FUNCNAME" "A convenience wrapper for bc. [1] .. [n] \
+function bbc-calc () {
+    	init-help-output "$FUNCNAME" "A convenience wrapper for bc. [1] .. [n] \
 The arithmetical problem you want to solve." \
 $@ || return $?
 
@@ -52,8 +52,8 @@ $@ || return $?
     echo "scale=4; ${calculate}" | bc
 }
 
-function bbc_days_between () {
-	init_help_output "$FUNCNAME" "Calculates the time between two given dates \
+function bbc-days-between () {
+	init-help-output "$FUNCNAME" "Calculates the time between two given dates \
 in the form YYYY-MM-DD and with the second date included in the calculation.\
 [1] First date. [2] Second date (optional, default: today)." \
 $@ || return $?
@@ -63,12 +63,12 @@ $@ || return $?
     ep1=$( date --date "$1" +%s )
     [ -v $2 ] && ep2=$( date +%s ) || ep2=$( date --date "$2" +%s )
     diffEp=$(( $ep2 - $ep1 ))
-    bbc_calc "$diffEp / 60 / 60 / 24"     
+    bbc-calc "$diffEp / 60 / 60 / 24"     
     
 }
 
-function bbc_zip () {
-	init_help_output "$FUNCNAME" "Straight-forward zipping with mandatory \
+function bbc-zip () {
+	init-help-output "$FUNCNAME" "Straight-forward zipping with mandatory \
 AES-encryption and removal of source file/folder respectively source zip-file.\
 [1] Direction, either (p)ack or (u)npack. [2] Folder/file." \
 $@ || return $?
@@ -89,8 +89,8 @@ $@ || return $?
     
 }
 
-function bbc_zip_subfolders() {
-    init_help_output "$FUNCNAME" "Zips the content of all immediate sub-\
+function bbc-zip-subfolders() {
+    init-help-output "$FUNCNAME" "Zips the content of all immediate sub-\
 directories to ZIP-files with the same name." $@ || return $?
        
     find -maxdepth 1 -type d ! -name "." | while read dir;
@@ -103,8 +103,8 @@ directories to ZIP-files with the same name." $@ || return $?
     done
 }
 
-function bbc_wd () {
-	init_help_output "$FUNCNAME" "An extension of the system's default cd \
+function bbc-wd () {
+	init-help-output "$FUNCNAME" "An extension of the system's default cd \
 command with pattern-based searching of candidates before changing to the \
 candidate folder that has been found. wd means 'warp directory'.[1] Directory \
 pattern." $@ || return $?
@@ -112,7 +112,7 @@ pattern." $@ || return $?
 	MAX_DEPTH=3 # How deep should wd look in the folder tree for matches? 
 	MAX_HITS_BEFORE_BREAK=5 # After how many hits should wd stop searching? 
 	
-	# important: use builtin cd in scenarios where cd is aliased to bbc_wd !!
+	# important: use builtin cd in scenarios where cd is aliased to bbc-wd !!
 	
 	# on 'wd' without any options, don't do anything (in contrast to 'cd' )
 	if [ $# -le 0 ] || [ -v "$1" ]; then return; fi 
@@ -152,19 +152,19 @@ pattern." $@ || return $?
 	fi 
 }
 
-function bbc_generate_rsa_keypair () {
-    init_help_output "$FUNCNAME" "Generates an RSA public and private key pair \
+function bbc-generate-rsa-keypair () {
+    init-help-output "$FUNCNAME" "Generates an RSA public and private key pair \
 in the users home folder." $@ || return $?
     
-    if [ $( bbc_is_cygwin ) == 1 ]; then
+    if [ $( bbc-is-cygwin ) == 1 ]; then
 		mkdir -p ${USERPROFILE}/.ssh
 		targetdir_arg="-f $( cygpath -u ${USERPROFILE}/.ssh )/id_rsa"
 	fi
     ssh-keygen -q -t rsa -b 4096 ${targetdir_arg} -N ''
 }
 
-function bbc_run_psql () {
-	init_help_output "$FUNCNAME" "Runs a given postgresql command through the \
+function bbc-run-psql () {
+	init-help-output "$FUNCNAME" "Runs a given postgresql command through the \
 psql command line. ATTENTION: This method assumes that \$PG_PASS \$PG_USSER \
 and \$PG_DB are set somewhere in your script.[1] PostgreSQL Query with \
 escaped quotation marks." $@ || return $?
@@ -173,8 +173,8 @@ escaped quotation marks." $@ || return $?
 	psql -h localhost -t -F " " -A -c "$1" $PG_DB $PG_USER
 }
 
-function bbc_archive () {
-	init_help_output "$FUNCNAME" "Packs the given folder to a zip archive \
+function bbc-archive () {
+	init-help-output "$FUNCNAME" "Packs the given folder to a zip archive \
 and removes the source folder on successful packaging. Optionally you can set \
 a 'BBC_ARCHIVE_FOLDER' pointing to your desired archive folder.[1] Source \
 folder to be packed." $@ || return $?
@@ -187,12 +187,12 @@ folder to be packed." $@ || return $?
     [ ! -z $BBC_ARCHIVE_FOLDER ] && target_folder=$BBC_ARCHIVE_FOLDER
     target_folder=$( readlink -f $target_folder )
     
-    datetime=$( bbc_get_datetime )
+    datetime=$( bbc-get-datetime )
     basename=$( basename $fulldir )
     trgfile=${datetime}_${basename}.zip
 
     echo -e "You want to pack '$fulldir' to '${target_folder}/$trgfile' and remove source folder."
-    yes=$( bbc_yesno "Are you sure?" )
+    yes=$( bbc-yesno "Are you sure?" )
     [ $yes != 1 ] && { echo; return 0; }
     
     cd $fulldir
@@ -216,8 +216,8 @@ folder to be packed." $@ || return $?
 # GIT UTILITIES
 # ==============================================================================
 
-function bbc_git_repoinit () {
-    init_help_output "$FUNCNAME" "Quick fix to setup a newly cloned github \
+function bbc-git-repoinit () {
+    init-help-output "$FUNCNAME" "Quick fix to setup a newly cloned github \
 repository with the desired username and email and apply some fixes.[1] \
 Your github username.[2] Your github e-mail address." $@ || return $?
 
@@ -242,20 +242,20 @@ might also need to add your public rsa key to github."
     
 }
 
-function bbc_git_is_repo () {
-    init_help_output "$FUNCNAME" "Returns 1 if you're currently inside a git \
+function bbc-git-is-repo () {
+    init-help-output "$FUNCNAME" "Returns 1 if you're currently inside a git \
 repository folder." $@ || return $?
 
     git rev-parse 2> /dev/null; [ $? == 0 ] && echo 1
 }
 
-function bbc_git_author_contributions () {
-    init_help_output "$FUNCNAME" "Checks for line/code changes of the given \
+function bbc-git-author-contributions () {
+    init-help-output "$FUNCNAME" "Checks for line/code changes of the given \
 author and outputs some summarized statistics.[1] Username (can be a pattern).\
 [2] Since-date, e.g., 01.12.2015.[3] File pattern (optional, all if \
 ommitted)." $@ || return $?
 
-    [ "$( bbc_git_is_repo )" != "1" ] && { echo "You're not inside a git repo \
+    [ "$( bbc-git-is-repo )" != "1" ] && { echo "You're not inside a git repo \
 directory."; return 1; }
     [ -z "$1" ] && { echo "Author name must be set."; return 1; }
     since="1.weeks"
@@ -275,25 +275,25 @@ directory."; return 1; }
 # INTERACTIVITY UTILITIES
 # ==============================================================================
 
-function bbc_clear () {
-	init_help_output "$FUNCNAME" "Clears the screen for real and removes any\
+function bbc-clear () {
+	init-help-output "$FUNCNAME" "Clears the screen for real and removes any\
 preceeding content." $@ || return $?
 
 	printf "\033c"
 }
 
-function bbc_askpass () {
-	init_help_output "$FUNCNAME" "Asks the user for a password.[1] Optional \
+function bbc-askpass () {
+	init-help-output "$FUNCNAME" "Asks the user for a password.[1] Optional \
 alternate question, e.g. \"Enter your google.com password\"." $@ || return $?
 
 	question="Enter password"
 	if [ $# -ge 1 ]; then question=$1; fi
-	read -s -p "$question: " bbc_password
+	read -s -p "$question: " bbc-password
 	echo ""
 }
 
-function bbc_yesno () {
-	init_help_output "$FUNCNAME" "Asks the user a yes/no question and returns \
+function bbc-yesno () {
+	init-help-output "$FUNCNAME" "Asks the user a yes/no question and returns \
 1 if 'yes' and 0 if 'no'.[1] The question to ask." $@ || return $?
 
 	read -p "$1 (y/n)" -n 1 -r
@@ -310,15 +310,15 @@ function bbc_yesno () {
 # DATE/TIME UTILITIES 
 # ==============================================================================
 
-function bbc_get_datetime () {
-	init_help_output "$FUNCNAME" "Returns a file-safe datetime timestamp to \
+function bbc-get-datetime () {
+	init-help-output "$FUNCNAME" "Returns a file-safe datetime timestamp to \
 be used in files." $@ || return $?
 	
 	date "+%Y%m%d-%H%M%S"
 }
 
-function bbc_epoch () {
-	init_help_output "$FUNCNAME" "Returns the current epoch timestamp." $@ || \
+function bbc-epoch () {
+	init-help-output "$FUNCNAME" "Returns the current epoch timestamp." $@ || \
 return $?
 	
 	date "+%s"
@@ -328,16 +328,16 @@ return $?
 # I/O UTILITIES 
 # ==============================================================================
 
-function bbc_find_leaf_dirs () {
-	init_help_output "$FUNCNAME" "Returns all folder names that don't have any \
+function bbc-find-leaf-dirs () {
+	init-help-output "$FUNCNAME" "Returns all folder names that don't have any \
 subfolders of their own.[1] Path to directory." $@ || return $?
 
 	[ -z "${1}" ] || [ ! -e "${1}" ] && { echo "No or unknown folder."; return;}
 	find "${1}" -type d -exec sh -c '(ls -p "{}"|grep />/dev/null)||echo "{}"' \;
 }
 
-function bbc_whereami () {
-	init_help_output "$FUNCNAME" "Returns the location of the current script.\
+function bbc-whereami () {
+	init-help-output "$FUNCNAME" "Returns the location of the current script.\
 [1] If '-d' then return parent dirname only."\
 	$@ || return $?
 
@@ -349,16 +349,16 @@ function bbc_whereami () {
 	fi
 }
 
-function bbc_get_filename () {
-	init_help_output "$FUNCNAME" "Returns filename without path and suffix \
+function bbc-get-filename () {
+	init-help-output "$FUNCNAME" "Returns filename without path and suffix \
 from given filepath.[1] Path to file." $@ || return $?
 	
 	filename=$(basename "$1")
 	echo ${filename%.*}
 }
 
-function bbc_get_filesuffix () {
-	init_help_output "$FUNCNAME" "Returns the file suffix without path and \
+function bbc-get-filesuffix () {
+	init-help-output "$FUNCNAME" "Returns the file suffix without path and \
 filename from given filepath.[1] Path to file." $@ || return $?
 	
 	filename=$(basename "$1")
@@ -369,38 +369,38 @@ filename from given filepath.[1] Path to file." $@ || return $?
 # STRING UTILITIES 
 # ==============================================================================
 
-function bbc_split_on_pattern () {
-	init_help_output "$FUNCNAME" "Splits a file on a given regex pattern into \
+function bbc-split-on-pattern () {
+	init-help-output "$FUNCNAME" "Splits a file on a given regex pattern into \
 multiple files.[1] Input file.[2] Regular expression to split file at." \
 $@ || return $?
 	
-	base=$( bbc_get_filename $1 )
-	suff=$( bbc_get_filesuffix $1 )
+	base=$( bbc-get-filename $1 )
+	suff=$( bbc-get-filesuffix $1 )
 	awk -v pat="$2" -v base=$base -v suff=$suff '$0 ~ pat { i++ }{ \
 	print > base"."sprintf("%05d", i)"."suff }' ${1}
 }
 
-function bbc_justify_text () {
-	init_help_output "$FUNCNAME" "Folds the given text to either at a fixed \
+function bbc-justify-text () {
+	init-help-output "$FUNCNAME" "Folds the given text to either at a fixed \
 number of columns or, if obtainable, the width of the console or at a fixed \
 with of 70.[1] Input text.[2] Optional line width." \
 	$@ || return $?
 
 	columns=$2
-	if [ -v $columns ]; then columns=$( bbc_exe "tput cols" ); fi
+	if [ -v $columns ]; then columns=$( bbc-exe "tput cols" ); fi
 	if [ -v $columns ]; then columns=70; fi
 	echo -e "$1" | fold -s -w $columns 
 }
 
-function bbc_remove_duplicate_empty_lines () {
-	init_help_output "$FUNCNAME" "Removes duplicate empty lines read from \
+function bbc-remove-duplicate-empty_lines () {
+	init-help-output "$FUNCNAME" "Removes duplicate empty lines read from \
 standard-in." $@ || return $?
 	
 	sed 'N;/^\n$/d;P;D' < /dev/stdin 
 }
 
-function bbc_urlencode () {
-	init_help_output "$FUNCNAME" "URL-enodes the given string.[1] The \
+function bbc-urlencode () {
+	init-help-output "$FUNCNAME" "URL-enodes the given string.[1] The \
 string to be encoded." $@ || return $?
 
 	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" \
@@ -411,22 +411,22 @@ string to be encoded." $@ || return $?
 	-e "s/ /%20/g" 
 }
 
-function bbc_print_xml () {
-	init_help_output "$FUNCNAME" "Pretty-prints an XML string to the command \
+function bbc-print-xml () {
+	init-help-output "$FUNCNAME" "Pretty-prints an XML string to the command \
 line.[1] XML-file." $@ || return $?
 	
-	bbc_exe tput setaf 1
+	bbc-exe tput setaf 1
 	echo
 	xmllint --format $1
 	echo
-	bbc_exe tput sgr 0
+	bbc-exe tput sgr 0
 }
 
 # ==============================================================================
 # INTERNAL FUNCTIONS
 # ==============================================================================
 
-function init_help_output () {
+function init-help-output () {
 	function_name="$1"; shift
 	function_help="$1"; shift
 	fg=
@@ -453,15 +453,15 @@ function init_help_output () {
 		for i in $( seq 1 $arguments ); do arg_string="$arg_string[$i] "; done
 		help_string="${help_string} ${fga}${arg_string}${rs}\n\n${function_help}"
 		# print help string 
-		bbc_justify_text "$help_string" 70
+		bbc-justify-text "$help_string" 70
         return 1
     else
         return 0
 	fi
 }
 
-function init_manual () {
-	for fct in $( cat $( bbc_whereami ) | grep -e "^function bbc_.*" | \
+function init-manual () {
+	for fct in $( cat $( bbc-whereami ) | grep -e "^function bbc-.*" | \
 	sed -e "s/^function[ ]*//g" -e "s/ (.*//g" )
 	do
 		eval $fct -h 
@@ -472,5 +472,5 @@ function init_manual () {
 # if called directly, print all help sections 
 if [[ $_ == $0 ]]
 then
-	init_manual
+	init-manual
 fi
