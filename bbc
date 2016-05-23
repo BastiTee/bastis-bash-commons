@@ -203,7 +203,7 @@ folder to be packed." $@ || return $?
     "${target_folder}/${trgfile}" > /dev/null; echo $? ) == 0 ]
     then
       echo -e "\nPacking successful. Will remove source folder."
-      arm -rf $fulldir
+      rm -rf $fulldir
     else
       echo -e "\nError while packing. Source folder not deleted."
       return 1
