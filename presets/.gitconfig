@@ -9,7 +9,7 @@
 	trustctime = false
 	editor = vim
 	filemode = false
-	autocrlf = false
+	autocrlf = true
 	bare = false
 	preloadindex = true
 	fscache = true
