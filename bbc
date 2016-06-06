@@ -400,7 +400,7 @@ standard-in." $@ || return $?
 }
 
 function bbc-urlencode () {
-	init-help-output "$FUNCNAME" "URL-enodes the given string.[1] The \
+	init-help-output "$FUNCNAME" "URL-encodes the given string.[1] The \
 string to be encoded." $@ || return $?
 
 	echo "$1" | sed -e "s/!/%21/g" -e "s/\"/%22/g" -e "s/#/%23/g" \
@@ -409,6 +409,18 @@ string to be encoded." $@ || return $?
 	-e "s/\//%2F/g" -e "s/:/%3A/g" -e "s/;/%3B/g" -e "s/=/%3D/g" \
 	-e "s/?/%3F/g" -e "s/@/%40/g" -e "s/\[/%5B/g" -e "s/\]/%5D/g" \
 	-e "s/ /%20/g" 
+}
+
+function bbc-urldecode () {
+	init-help-output "$FUNCNAME" "URL-decodes the given string.[1] The \
+string to be decoded." $@ || return $?
+
+	echo "$1" | sed -e "s/%21/!/g" -e "s/%22/\"/g" -e "s/%23/#/g" \
+	-e "s/%24/\\$/g" -e "s/%26/&/g" -e "s/%27/'/g" -e "s/%28/(/g" \
+	-e "s/%29/)/g" -e "s/%2A/\*/g" -e "s/%2B/+/g" -e "s/%2C/,/g" \
+	-e "s/%2F/\//g" -e "s/%3A/:/g" -e "s/%3B/;/g" -e "s/%3D/=/g" \
+	-e "s/%3F/?/g" -e "s/%40/@/g" -e "s/%5B/\[/g" -e "s/%5D/\]/g" \
+	-e "s/%20/ /g" 
 }
 
 function bbc-print-xml () {
