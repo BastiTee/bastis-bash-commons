@@ -7,13 +7,15 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
+[ -v $( command -v exif ) ] && { echo "'exif' not installed!"; exit 1; }
 [ -z "$1" ] && { echo "No input folder"; exit 1; } || ifolder="$1"
 [ "$2" == "0" ] && sim=0 || sim=1
-
 ifolder=$( readlink -f "$1" )
 
-echo "-- input = $ifolder"
-echo "-- sim   = $sim"
+echo ""
+echo "-- input dir   = $ifolder"
+echo "-- simulation  = $sim"
+echo ""
 
 find "$ifolder" -type f -iname "*.jpg" -o -iname "*.jpeg" | while read file
 do
