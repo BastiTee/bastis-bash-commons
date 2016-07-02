@@ -67,6 +67,8 @@ alias ll="ls -lA" # long list
 alias l="ll" 
 alias ..="cd .."
 alias ...="cd ../../"
+alias aptdate="sudo bash -c \"apt-get update && apt-get upgrade -y && apt-get autoremove && apt-get autoclean\""
+
 # find pattern in code 
 alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --exclude-dir=bin"
 
