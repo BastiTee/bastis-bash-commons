@@ -1,0 +1,20 @@
+[
+    // Hotkey to reindent code
+    { "keys": ["ctrl+alt+r"], "command": "reindent" },
+
+    // Disables all font-size changes (breaks user setting formatting)
+
+    { "keys": ["ctrl++"], "command": "-unbind-" },
+    { "keys": ["ctrl+="], "command": "-unbind-" },
+    { "keys": ["ctrl+keypad_plus"], "command": "-unbind-" },
+    { "keys": ["ctrl+-"], "command": "-unbind-" },
+    { "keys": ["ctrl+keypad_minus"], "command": "-unbind-" },
+    { "keys": ["ctrl+equals"], "command": "-unbind-" },
+    { "keys": ["ctrl+shift+equals"], "command": "-unbind-" },
+    { "keys": ["ctrl+keypad_plus"], "command": "-unbind-" },
+    { "keys": ["ctrl+shift+keypad_plus"], "command": "-unbind-" },
+
+    // Toggle mini view
+    { "keys": ["ctrl+k", "ctrl+m"], "command": "toggle_minimap" }
+
+]
