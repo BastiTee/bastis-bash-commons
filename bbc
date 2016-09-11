@@ -2,7 +2,7 @@
 # ==============================================================================
 # BASTI'S BASH COMMONS
 # Commonly used bash methods.
-# 
+#
 # Best way to include is to add the script to your path and include with
 # if [ ! -v $( command -v "bbc" ) ]; then source bbc; else exit; fi
 #
@@ -17,8 +17,8 @@ function bbc-is-cygwin () {
 	init-help-output "$FUNCNAME" "Returs 1 if this script runs in a cygwin \
 environment and 0 if not." $@ || return $?
 
-	[ -z "$( uname -a | grep -i "cygwin" )"/ ] && echo 0 || echo 1 
-    
+	[ -z "$( uname -a | grep -i "cygwin" )"/ ] && echo 0 || echo 1
+
 }
 
 function bbc-get-bash-version () {
@@ -33,9 +33,9 @@ function bbc-exe () {
 	init-help-output "$FUNCNAME" "Tests if a command does exist and, if yes, \
 runs it. This comes in handy if you are unsure whether a tool exists.\
 [1] Command to be executed." $@ || return $?
-	
+
 	[ ! -v $( command -v $1 ) ] && { eval $@; return 0; } || return 1
-	
+
 }
 
 # ==============================================================================
@@ -59,12 +59,12 @@ in the form YYYY-MM-DD and with the second date included in the calculation.\
 $@ || return $?
 
     [ $# -le 0 ] && { echo "You must set at least one date."; return 1; }
-    
+
     ep1=$( date --date "$1" +%s )
     [ -v $2 ] && ep2=$( date +%s ) || ep2=$( date --date "$2" +%s )
     diffEp=$(( $ep2 - $ep1 ))
-    bbc-calc "$diffEp / 60 / 60 / 24"     
-    
+    bbc-calc "$diffEp / 60 / 60 / 24"
+
 }
 
 function bbc-zip () {
@@ -74,10 +74,10 @@ AES-encryption and removal of source file/folder respectively source zip-file.\
 $@ || return $?
 
     [ -z $( command -v 7z ) ] && { echo "No 7zip installed."; return 1; }
-    direction=p 
+    direction=p
     [ "$1" != "p" ] && [ "$1" != "u" ] && { echo "Bad direction."; return 1; } \
-    || direction="$1" 
-    [ ! -e "$2" ] && { echo "File/folder not readable."; return 1; } 
+    || direction="$1"
+    [ ! -e "$2" ] && { echo "File/folder not readable."; return 1; }
 
     if [ "$direction" == "p" ]; then
         7za a -p -tzip -mem=AES256 "$( basename "$2" ).zip" "$2"
@@ -86,13 +86,13 @@ $@ || return $?
         7za x "$2"
         [ $? == 0 ] && rm -rf "$2"
     fi
-    
+
 }
 
 function bbc-zip-subfolders() {
     init-help-output "$FUNCNAME" "Zips the content of all immediate sub-\
 directories to ZIP-files with the same name." $@ || return $?
-       
+
     find -maxdepth 1 -type d ! -name "." | while read dir;
     do
         bname=$( basename $dir )
@@ -109,53 +109,106 @@ command with pattern-based searching of candidates before changing to the \
 candidate folder that has been found. wd means 'warp directory'.[1] Directory \
 pattern." $@ || return $?
 
-	MAX_DEPTH=3 # How deep should wd look in the folder tree for matches? 
-	MAX_HITS_BEFORE_BREAK=5 # After how many hits should wd stop searching? 
-	
+	MAX_DEPTH=3 # How deep should wd look in the folder tree for matches?
+	MAX_HITS_BEFORE_BREAK=5 # After how many hits should wd stop searching?
+
 	# important: use builtin cd in scenarios where cd is aliased to bbc-wd !!
-	
+
 	# on 'wd' without any options, don't do anything (in contrast to 'cd' )
-	if [ $# -le 0 ] || [ -v "$1" ]; then return; fi 
+	if [ $# -le 0 ] || [ -v "$1" ]; then return; fi
 	# keep 'cd -' function, but without output
-	if [ "$1" == "-" ]; then builtin cd - &> /dev/null; return; fi 
+	if [ "$1" == "-" ]; then builtin cd - &> /dev/null; return; fi
 	# keep 'cd ..' function
-	if [ "$1" == ".." ]; then builtin cd ..; return; fi  
+	if [ "$1" == ".." ]; then builtin cd ..; return; fi
 	# 'cd ...' function
 	if [ "$1" == "..." ]; then builtin cd ..; builtin cd ..; return; fi
-	# 'cd <folder>' if folder exists (basic cd behaviour) 
-	if [ -e "$1" ] && [ -d "$1" ]; then builtin cd "$1"; return; fi 
-	# on absolute paths just do a normal cd 
+	# 'cd <folder>' if folder exists (basic cd behaviour)
+	if [ -e "$1" ] && [ -d "$1" ]; then builtin cd "$1"; return; fi
+	# on absolute paths just do a normal cd
 	if [[ "$1" =~ ^/.* ]]; then builtin cd "$1"; return; fi
 	# pattern-based search and changing of dirs
 	no_hits=0
 	first_hit=
 	pattern=$( echo "*${1}*" | sed -r -e "s/[\/]+/\//g" -e "s/\//*\/*/g" )
-	# core command: all dirs, no hidden dirs 
+	# core command: all dirs, no hidden dirs
 	command="find -maxdepth $MAX_DEPTH -type d \( -iwholename \"$pattern\" ! \
-	-iwholename \"*\/.*\" \) -prune 2> /dev/null"	
+	-iwholename \"*\/.*\" \) -prune 2> /dev/null"
 	#echo "--- warping to: '${pattern}' with '${command}'"
-	for hit in $( eval $command ) 
+	for hit in $( eval $command )
 	do
-		if [ $no_hits == 0 ]; then first_hit=$hit; fi 
+		if [ $no_hits == 0 ]; then first_hit=$hit; fi
 		no_hits=$(( $no_hits + 1 ))
 		echo $hit
-		if [ $no_hits == $MAX_HITS_BEFORE_BREAK ]; then 
-			echo -e "...\n-bash: wd: $1: Too many potential hits"; break 
-		fi 
+		if [ $no_hits == $MAX_HITS_BEFORE_BREAK ]; then
+			echo -e "...\n-bash: wd: $1: Too many potential hits"; break
+		fi
 	done
-	if [ $no_hits == 0 ]; then 
+	if [ $no_hits == 0 ]; then
 		echo "-bash: wd: $1: No such file or directory"; return
-	elif [ $no_hits -ge 2 ]; then 
+	elif [ $no_hits -ge 2 ]; then
 		return
-	else 
+	else
 		builtin cd $first_hit
-	fi 
+	fi
+}
+
+function bbc-bb () {
+	init-help-output "$FUNCNAME" "A bash bookmarker.[1]\n\n<NUM> Change to one of \
+the stored bookmarks.\n\n<b> Bookmark the current folder path. All \
+bookmarks will be added to ~/.bbcbookmarksrc (max. 10 entries).\n\nWithout \
+any arguments, the current list will be printed. When you stored 10 items, \
+you'll need to manually delete bookmarks from ~/.bbcbookmarksrc." \
+$@ || return $?
+
+	BMF=$( readlink -f ~/.bbc-bookmarks-rc )
+
+	if [ $# == 0 ]; then
+		if [ -e $BMF ]; then
+			grep . $BMF | grep -ne ".*"
+			return 0
+		else
+			echo "No bookmarks saved."
+			return 0
+		fi
+	fi
+
+	if [ $1 == "b" ]; then
+		[ ! -e $BMF ] && { printf '' > $BMF; }
+		currdir=$( readlink -f $( pwd ))
+		if [ ! -z "$( cat $BMF | sed -e "s/\/\\\\//g" | grep -e "^$currdir$" )" ]
+		then
+			echo "Directory already bookmarked.";
+			return 0;
+		fi
+		yes=$( bbc-yesno "Storing $currdir to bookmarks. Is that correct?" )
+	    [ $yes != 1 ] && { echo; return 0; }
+		echo "$currdir" >> $BMF
+		echo ""
+		echo "Stored current directory $currdir"
+		return 0
+	fi
+
+	if [[ $1 =~ ^[0-9]+$ ]]; then
+		content=$( grep . $BMF )
+		bmcount=$( echo -e "$content" | wc -l )
+		[ $1 -gt $bmcount ] || [ $1 -le 0 ] && {
+			echo "Invalid index. Must be between 1 and highest bookmark index."
+			return 1
+		}
+		tdir=$( echo -e "$content" | sed "${1}q;d" )
+		cd "$tdir"
+		echo "Changed to bookmark: $tdir"
+		return 0
+	else
+		echo "Invalid argument."
+		return 0
+	fi
 }
 
 function bbc-generate-rsa-keypair () {
     init-help-output "$FUNCNAME" "Generates an RSA public and private key pair \
 in the users home folder." $@ || return $?
-    
+
     if [ $( bbc-is-cygwin ) == 1 ]; then
 		mkdir -p ${USERPROFILE}/.ssh
 		targetdir_arg="-f $( cygpath -u ${USERPROFILE}/.ssh )/id_rsa"
@@ -182,11 +235,11 @@ folder to be packed." $@ || return $?
     [ -z "$1" ] && { echo "No folder provided."; return 1; }
     fulldir=$( readlink -f "$1" )
     [ ! -d "$fulldir" ] && { echo "Given path is not a directory"; return 1; }
-    
+
     target_folder="."
     [ ! -z $BBC_ARCHIVE_FOLDER ] && target_folder=$BBC_ARCHIVE_FOLDER
     target_folder=$( readlink -f $target_folder )
-    
+
     datetime=$( bbc-get-datetime )
     basename=$( basename $fulldir )
     trgfile=${datetime}_${basename}.zip
@@ -194,7 +247,7 @@ folder to be packed." $@ || return $?
     echo -e "You want to pack '$fulldir' to '${target_folder}/$trgfile' and remove source folder."
     yes=$( bbc-yesno "Are you sure?" )
     [ $yes != 1 ] && { echo; return 0; }
-    
+
     cd $fulldir
     zip -9r ${trgfile} *
     mv ${trgfile} ${target_folder}
@@ -221,12 +274,12 @@ function bbc-git-repoinit () {
 repository with the desired username and email and apply some fixes.[1] \
 Your github username.[2] Your github e-mail address." $@ || return $?
 
-    [ -z "$1" ] && { echo "No username provided."; return 1; } 
-    [ -z "$2" ] && { echo "No user e-mail provided."; return 1; } 
+    [ -z "$1" ] && { echo "No username provided."; return 1; }
+    [ -z "$2" ] && { echo "No user e-mail provided."; return 1; }
 
     git config user.name "$1"
 	git config user.email "$2"
-	# Fix https origin 
+	# Fix https origin
 	https_link=$( cat .git/config | grep -A3 "\[remote \"origin\"\]" |\
 	grep https: | awk '{print $3}')
 	if [ ! -v $https_link ]
@@ -239,7 +292,7 @@ Your github username.[2] Your github e-mail address." $@ || return $?
 	echo "Running 'git pull -r' now. If you experience login problems, you \
 might also need to add your public rsa key to github."
     git pull -r
-    
+
 }
 
 function bbc-git-is-repo () {
@@ -260,8 +313,8 @@ directory."; return 1; }
     [ -z "$1" ] && { echo "Author name must be set."; return 1; }
     since="1.weeks"
     [ ! -z "$2" ] && since="$2"
-    [ -z "$3" ] && pattern="" || pattern="-- $3"    
-    
+    [ -z "$3" ] && pattern="" || pattern="-- $3"
+
     git_base="git --no-pager log --no-merges --since=${since} --all \
     --not origin/rel12v0 --author=$1 "
     eval $git_base --oneline $pattern
@@ -307,25 +360,25 @@ function bbc-yesno () {
 }
 
 # ==============================================================================
-# DATE/TIME UTILITIES 
+# DATE/TIME UTILITIES
 # ==============================================================================
 
 function bbc-get-datetime () {
 	init-help-output "$FUNCNAME" "Returns a file-safe datetime timestamp to \
 be used in files." $@ || return $?
-	
+
 	date "+%Y%m%d-%H%M%S"
 }
 
 function bbc-epoch () {
 	init-help-output "$FUNCNAME" "Returns the current epoch timestamp." $@ || \
 return $?
-	
+
 	date "+%s"
 }
 
 # ==============================================================================
-# I/O UTILITIES 
+# I/O UTILITIES
 # ==============================================================================
 
 function bbc-find-leaf-dirs () {
@@ -352,7 +405,7 @@ function bbc-whereami () {
 function bbc-get-filename () {
 	init-help-output "$FUNCNAME" "Returns filename without path and suffix \
 from given filepath.[1] Path to file." $@ || return $?
-	
+
 	filename=$(basename "$1")
 	echo ${filename%.*}
 }
@@ -360,20 +413,20 @@ from given filepath.[1] Path to file." $@ || return $?
 function bbc-get-filesuffix () {
 	init-help-output "$FUNCNAME" "Returns the file suffix without path and \
 filename from given filepath.[1] Path to file." $@ || return $?
-	
+
 	filename=$(basename "$1")
 	echo ${filename##*.}
 }
 
 # ==============================================================================
-# STRING UTILITIES 
+# STRING UTILITIES
 # ==============================================================================
 
 function bbc-split-on-pattern () {
 	init-help-output "$FUNCNAME" "Splits a file on a given regex pattern into \
 multiple files.[1] Input file.[2] Regular expression to split file at." \
 $@ || return $?
-	
+
 	base=$( bbc-get-filename $1 )
 	suff=$( bbc-get-filesuffix $1 )
 	awk -v pat="$2" -v base=$base -v suff=$suff '$0 ~ pat { i++ }{ \
@@ -389,14 +442,14 @@ with of 70.[1] Input text.[2] Optional line width." \
 	columns=$2
 	if [ -v $columns ]; then columns=$( bbc-exe "tput cols" ); fi
 	if [ -v $columns ]; then columns=70; fi
-	echo -e "$1" | fold -s -w $columns 
+	echo -e "$1" | fold -s -w $columns
 }
 
 function bbc-remove-duplicate-empty_lines () {
 	init-help-output "$FUNCNAME" "Removes duplicate empty lines read from \
 standard-in." $@ || return $?
-	
-	sed 'N;/^\n$/d;P;D' < /dev/stdin 
+
+	sed 'N;/^\n$/d;P;D' < /dev/stdin
 }
 
 function bbc-urlencode () {
@@ -408,7 +461,7 @@ string to be encoded." $@ || return $?
 	-e "s/)/%29/g" -e "s/*/%2A/g" -e "s/+/%2B/g" -e "s/,/%2C/g" \
 	-e "s/\//%2F/g" -e "s/:/%3A/g" -e "s/;/%3B/g" -e "s/=/%3D/g" \
 	-e "s/?/%3F/g" -e "s/@/%40/g" -e "s/\[/%5B/g" -e "s/\]/%5D/g" \
-	-e "s/ /%20/g" 
+	-e "s/ /%20/g"
 }
 
 function bbc-urldecode () {
@@ -420,13 +473,13 @@ string to be decoded." $@ || return $?
 	-e "s/%29/)/g" -e "s/%2A/\*/g" -e "s/%2B/+/g" -e "s/%2C/,/g" \
 	-e "s/%2F/\//g" -e "s/%3A/:/g" -e "s/%3B/;/g" -e "s/%3D/=/g" \
 	-e "s/%3F/?/g" -e "s/%40/@/g" -e "s/%5B/\[/g" -e "s/%5D/\]/g" \
-	-e "s/%20/ /g" 
+	-e "s/%20/ /g"
 }
 
 function bbc-print-xml () {
 	init-help-output "$FUNCNAME" "Pretty-prints an XML string to the command \
 line.[1] XML-file." $@ || return $?
-	
+
 	bbc-exe tput setaf 1
 	echo
 	xmllint --format $1
@@ -449,22 +502,22 @@ function init-help-output () {
 		fga=$( tput setaf 3 )
 		rs=$( tput sgr0 )
 	fi
-	
+
 	if [ "$1" == "-h" ] || [ "$1" == "--h" ] || [ "$1" == "-help" ] || \
 	[ "$1" == "--help" ]
 	then
-		# preprocess help output 
+		# preprocess help output
 		arguments=$( grep -o '[[0-9]]' <<< "$function_help" | wc -l )
 		function_help=$( echo -e "$function_help" | \
 		sed -e "s/\[1\]/\n[1]/g" )
 		function_help=$( echo -e "$function_help" | \
 		sed -r -e "s/(\[[0-9]\])/\n${fga}\1${rs}/g" )
-		# construct help output 
+		# construct help output
 		help_string="\nUsage: ${fg}${function_name}${rs}"
 		arg_string=
 		for i in $( seq 1 $arguments ); do arg_string="$arg_string[$i] "; done
 		help_string="${help_string} ${fga}${arg_string}${rs}\n\n${function_help}"
-		# print help string 
+		# print help string
 		bbc-justify-text "$help_string" 70
         return 1
     else
@@ -476,12 +529,12 @@ function init-manual () {
 	for fct in $( cat $( bbc-whereami ) | grep -e "^function bbc-.*" | \
 	sed -e "s/^function[ ]*//g" -e "s/ (.*//g" )
 	do
-		eval $fct -h 
+		eval $fct -h
 		printf '\n'; printf '_%.0s' {1..70}; printf '\n'
 	done
 }
 
-# if called directly, print all help sections 
+# if called directly, print all help sections
 if [[ $_ == $0 ]]
 then
 	init-manual

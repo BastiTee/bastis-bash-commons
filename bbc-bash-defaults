@@ -1,8 +1,8 @@
 #!/bin/bash
 # ==============================================================================
 # BASTI'S BASH DEFAULT SETTINGS
-# Commonly used bash settings on various machines. 
-# 
+# Commonly used bash settings on various machines.
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
@@ -11,7 +11,7 @@
 
 # = BASIC BASH SETTINGS ========================================================
 
-# Locale settings  
+# Locale settings
 export LANG="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
@@ -59,29 +59,29 @@ fi
 
 alias less="less -r" # raw control characters
 alias whence="type -a" # where, of a sort
-alias grep="grep --color" # colored grep 
-alias egrep="egrep --color=auto" # colored grep 
-alias fgrep="fgrep --color=auto" # colored grep 
+alias grep="grep --color" # colored grep
+alias egrep="egrep --color=auto" # colored grep
+alias fgrep="fgrep --color=auto" # colored grep
 alias ls="ls -hF --color=tty" # classify files in colour
 alias ll="ls -lA" # long list
-alias l="ll" 
+alias l="ll"
 alias ..="cd .."
 alias ...="cd ../../"
 alias aptdate="sudo bash -c \"apt-get update && apt-get upgrade -y && apt-get autoremove && apt-get autoclean\""
 
-# find pattern in code 
+# find pattern in code
 alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --exclude-dir=bin"
 
 # Find out location of sourced default file ..
 curr_loc=${BASH_SOURCE[0]}
-if [ ! -v $curr_loc ]; then 
-	# .. and if successful source bash commons functions as well 
+if [ ! -v $curr_loc ]; then
+	# .. and if successful source bash commons functions as well
 	curr_loc=$( echo $curr_loc | sed -r -e "s/\/[^\/]+$//g" )
-	source ${curr_loc}/bbc 
+	source ${curr_loc}/bbc
 	echo "Sourcing basti's bash commons functions successful."
-	# Aliases for quickly accessing commons functions 
+	# Aliases for quickly accessing commons functions
 	alias cd="bbc-wd"
-	alias table="bbc-table" 
+	alias table="bbc-table"
 	alias timeout="bbc-timeout"
 	alias fakename="bbc-fakename"
 	alias bugs="bbc-bugzilla-cli"
@@ -89,10 +89,11 @@ if [ ! -v $curr_loc ]; then
 	alias clear="bbc-clear"
 	alias szip="bbc-zip"
     alias c="bbc-calc"
+    alias bb="bbc-bb"
 fi
 
 # ==============================================================================
-echo "Loading basti's bash defaults successful." 
+echo "Loading basti's bash defaults successful."
 # ==============================================================================
 
 # Show full path in babun prompt (needs to be in .babunrc manually)
