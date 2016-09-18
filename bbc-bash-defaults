@@ -6,15 +6,15 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
+# Find path to script 
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Make sure this only gets sourced once
 [[ -z ${USER_BASHRC} ]] && USER_BASHRC="1" || return
 
 # = BASIC BASH SETTINGS ========================================================
 
-# Locale settings
-# export LANG="en_US.UTF-8"
-# export LC_CTYPE="en_US.UTF-8"
-# export LC_ALL="en_US.UTF-8"
+# Extend path with bash commons 
+PATH=${PATH}:${SCRIPTDIR}
 
 # If not running interactively, don't do anything
 [[ "$-" != *i* ]] && return
@@ -31,6 +31,9 @@ shopt -s histappend
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
 # Don"t put duplicate lines in the history.
 export HISTCONTROL=$HISTCONTROL${HISTCONTROL+,}ignoredups
@@ -55,7 +58,39 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# = ALIAS SETTINGS =============================================================
+# COLORED PROMT 
+# ===========================================================
+
+# set a fancy prompt (non-color, unless we know we "want" color)
+case "$TERM" in
+    xterm-color|*-256color) color_prompt=yes;;
+esac
+
+# uncomment for a colored prompt, if the terminal has the capability; turned
+# off by default to not distract the user: the focus in a terminal window
+# should be on the output of commands, not on the prompt
+force_color_prompt=yes
+
+if [ -n "$force_color_prompt" ]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
+    else
+        color_prompt=
+    fi
+fi
+
+if [ "$color_prompt" = yes ]; then
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+unset color_prompt force_color_prompt
+
+# ALIAS SETTINGS
+# ===========================================================
 
 alias less="less -r" # raw control characters
 alias whence="type -a" # where, of a sort
@@ -74,11 +109,9 @@ alias aptdate="sudo bash -c \"apt-get update && apt-get upgrade -y && apt-get au
 alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --exclude-dir=bin"
 
 # Find out location of sourced default file ..
-curr_loc=${BASH_SOURCE[0]}
-if [ ! -v $curr_loc ]; then
-	# .. and if successful source bash commons functions as well
-	curr_loc=$( echo $curr_loc | sed -r -e "s/\/[^\/]+$//g" )
-	source ${curr_loc}/bbc
+if [ ! -v ${SCRIPTDIR} ]; then
+	# .. and if successful source bash commons functions as well	
+	source ${SCRIPTDIR}/bbc
 	echo "Sourcing basti's bash commons functions successful."
 	# Aliases for quickly accessing commons functions
 	alias cd="bbc-wd"
@@ -91,11 +124,12 @@ if [ ! -v $curr_loc ]; then
 	alias szip="bbc-zip"
     alias c="bbc-calc"
     alias bb="bbc-bb"
+	alias gita="bbc-git-all"
 fi
 
-# ==============================================================================
+# FINALIZATION
+# ===========================================================
 echo "Loading basti's bash defaults successful."
-# ==============================================================================
 
 # Show full path in babun prompt (needs to be in .babunrc manually)
 # export PS1="\[\033[00;34m\]{ \[\033[01;34m\]\w \[\033[00;34m\]}\[\033[01;32m\] $( git rev-parse --abbrev-ref HEAD 2> /dev/null || echo ) \[\033[01;31m\]» \[\033[00m\]"
