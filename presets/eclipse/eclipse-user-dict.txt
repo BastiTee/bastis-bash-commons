@@ -33,3 +33,4 @@ frontend
 localhost
 subnet
 organisation
+bookmark
