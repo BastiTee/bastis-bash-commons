@@ -1,6 +1,5 @@
 set nobackup
 set nowritebackup
 set noundofile
-set bzn
 set number
 syntax on
