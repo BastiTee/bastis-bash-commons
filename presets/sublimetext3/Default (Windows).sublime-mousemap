@@ -1,6 +1,0 @@
-[
-    // Disables all font-size changes (breaks user setting formatting)
-
-	{ "button": "scroll_down", "modifiers": ["ctrl"], "command": "next_view" },
-	{ "button": "scroll_up", "modifiers": ["ctrl"], "command": "prev_view" }
-]
