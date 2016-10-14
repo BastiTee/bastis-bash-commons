@@ -1,5 +1,0 @@
-set nobackup
-set nowritebackup
-set noundofile
-set number
-syntax on
