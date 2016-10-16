@@ -9,11 +9,24 @@
 
 [ $# == 0 ] && { echo "No git argument provided."; exit 1; }
 
+git-summary () {
+    tmpf=$( mktemp )
+    dirn=$( basename $( dirname $1 ) )
+    printf "=%.0s" $( seq 1 ${#dirn} ) >> $tmpf
+    echo -e "\n${dirn}" >> $tmpf
+    printf "=%.0s" $( seq 1 ${#dirn} ) >> $tmpf
+    echo "" >> $tmpf
+    currdir=$( pwd )
+    cd $1
+    cd ..
+    git $2 2>&1 >> $tmpf
+    echo "" >> $tmpf
+    cat $tmpf 
+    rm $tmpf 
+    cd $currdir
+}
+
 for dir in $( find -maxdepth 2 -type d -name ".git" )
 do
-    dir=$( basename $( dirname $dir ) )
-    echo -e "\n-----------------\n$dir\n-----------------" 
-    cd $dir
-    git $@
-    cd ..
+    git-summary $( readlink -f $dir ) $1 
 done
