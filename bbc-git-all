@@ -8,25 +8,27 @@
 # ==============================================================================
 
 [ $# == 0 ] && { echo "No git argument provided."; exit 1; }
+gitcmd=$1
 
-git-summary () {
+gitsummary () {
+    absdir=$( readlink -f $1 )
     tmpf=$( mktemp )
-    dirn=$( basename $( dirname $1 ) )
+    dirn=$( basename $( dirname $absdir ) )
     printf "=%.0s" $( seq 1 ${#dirn} ) >> $tmpf
     echo -e "\n${dirn}" >> $tmpf
     printf "=%.0s" $( seq 1 ${#dirn} ) >> $tmpf
-    echo "" >> $tmpf
+    echo -e "\n" >> $tmpf
     currdir=$( pwd )
-    cd $1
+    cd $absdir
     cd ..
     git $2 2>&1 >> $tmpf
     echo "" >> $tmpf
     cat $tmpf 
     rm $tmpf 
     cd $currdir
+    return 0
 }
-
-for dir in $( find -maxdepth 2 -type d -name ".git" )
-do
-    git-summary $( readlink -f $dir ) $1 
-done
+export -f gitsummary
+    
+for dir in $( find -maxdepth 2 -type d -name ".git" ); do \
+echo "$dir"; done | xargs -P10 -I {} bash -c 'gitsummary $1 $2' _ {} $gitcmd
