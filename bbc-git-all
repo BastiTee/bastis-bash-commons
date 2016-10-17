@@ -23,12 +23,17 @@ gitsummary () {
     cd ..
     git $2 2>&1 >> $tmpf
     echo "" >> $tmpf
-    cat $tmpf 
-    rm $tmpf 
     cd $currdir
-    return 0
+    echo "$tmpf"
 }
 export -f gitsummary
     
+tmpfiles=$( mktemp )
+{
 for dir in $( find -maxdepth 2 -type d -name ".git" ); do \
 echo "$dir"; done | xargs -P10 -I {} bash -c 'gitsummary $1 $2' _ {} $gitcmd
+} > $tmpfiles 
+
+clear
+while read tmpfile; do cat $tmpfile; rm $tmpfile; done < $tmpfiles
+rm $tmpfiles 
