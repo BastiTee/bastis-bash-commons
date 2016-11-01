@@ -120,10 +120,10 @@ if [ ! -v ${SCRIPTDIR} ]; then
 	alias fakename="bbc-fakename"
 	alias bugs="bbc-bugzilla-cli"
 	alias note="bbc-note"
-	alias clear="bbc-clear"
 	alias szip="bbc-zip"
-    alias c="bbc-calc"
-    alias bb="bbc-bb"
+	alias clear="bbc-clear"
+        alias c="clear"
+        alias bb="bbc-bb"
 	alias gita="bbc-git-all"
 fi
 
