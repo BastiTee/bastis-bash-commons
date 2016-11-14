@@ -6,6 +6,15 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
+ENVCHECK=1
+for command in dirname sleep date; do
+    [ -z $( command -v $command ) ] && { 
+        echo "ERROR: '${command}' not available."
+        ENVCHECK=0
+        }
+done
+[ $ENVCHECK == 0 ] && { echo "Environment test failed. Will not source BBC."; return; }
+
 # Find path to script 
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Make sure this only gets sourced once
@@ -120,8 +129,8 @@ if [ ! -v ${SCRIPTDIR} ]; then
 	alias fakename="bbc-fakename"
 	alias szip="bbc-zip"
 	alias clear="bbc-clear"
-        alias c="clear"
-        alias bb="bbc-bb"
+    alias c="clear"
+    alias bb="bbc-bb"
 	alias gita="bbc-git-all"
 fi
 
