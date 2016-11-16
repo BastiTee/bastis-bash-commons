@@ -359,6 +359,14 @@ function bbc-yesno () {
 	fi
 }
 
+function bbc-rename-tab () {
+	init-help-output "$FUNCNAME" "Tries to set a new title for the current \
+terminal tab/window.[1] New title." $@ || return $?
+    
+    [ -z "$1" ] && return 0
+    PROMPT_COMMAND='echo -ne "\033]0;'$1'\007"'
+}
+
 # ==============================================================================
 # DATE/TIME UTILITIES
 # ==============================================================================
