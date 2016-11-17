@@ -232,7 +232,7 @@ pattern.[1] Pattern." $@ || return $?
 
 	[ -z "$1" ] && return 0
 	ps -ef | grep "$1" | grep -v grep | awk '{print $2}' |\
-	while read pid; do kill -9 $pid; done
+	while read pid; do kill -9 $pid; done | wc -l 
 }
 
 
