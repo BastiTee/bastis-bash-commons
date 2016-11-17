@@ -226,6 +226,16 @@ escaped quotation marks." $@ || return $?
 	psql -h localhost -t -F " " -A -c "$1" $PG_DB $PG_USER
 }
 
+function bbc-grep-kill () {
+	init-help-output "$FUNCNAME" "Kills a process by grepping ps for the given \
+pattern.[1] Pattern." $@ || return $?
+
+	[ -z "$1" ] && return 0
+	ps -ef | grep "$1" | grep -v grep | awk '{print $2}' |\
+	while read pid; do kill -9 $pid; done
+}
+
+
 function bbc-archive () {
 	init-help-output "$FUNCNAME" "Packs the given folder to a zip archive \
 and removes the source folder on successful packaging. Optionally you can set \
@@ -362,7 +372,7 @@ function bbc-yesno () {
 function bbc-rename-tab () {
 	init-help-output "$FUNCNAME" "Tries to set a new title for the current \
 terminal tab/window.[1] New title." $@ || return $?
-    
+
     [ -z "$1" ] && return 0
     PROMPT_COMMAND='echo -ne "\033]0;'$1'\007"'
 }
