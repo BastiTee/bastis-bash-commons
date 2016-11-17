@@ -6,20 +6,23 @@
 # ==============================================================================
 
 function show_help () {
-	echo -e "Create a selection interface from a list of commands."
-	echo -e "\nUsage: `basename $0` [-i <CMD_FILE>] [-c <CMD_LIST>] \
-[-t <HEADER_FILE>]\n"
-	echo -e "\t-i <CMD_FILE>\t\tInput file holding bash commands."
-    echo -e "\t-c <CMD_LIST>\t\tInput command generating list entries."
-	echo -e "\t-t <HEADER_FILE>\tAn optional file holding a header \
-to be printed."
-    echo 
-    echo -e "Note that either -i or -c must be set."
-    echo 
-	exit 1
+cat << EOF
+Create a selection interface from a list of commands.
+
+Usage: $( basename $0) [-i <CMD_FILE>] [-c <CMD_LIST>] [-t <HEADER_FILE>]
+
+    -i <CMD_FILE>     Input file holding bash commands.
+    -c <CMD_LIST>     Input command generating list entries.
+    -t <HEADER_FILE>  An optional file holding a header to be printed.
+    -p <PREFIX>       Optional command prefix (eg. 'java -jar')
+
+Note that either -i or -c must be set.
+
+EOF
+exit 1
 }
 
-# setup temp files and ensure deletion on exit 
+# setup temp files and ensure deletion on exit
 tmplist=$( mktemp )
 strippedlist=$( mktemp )
 function cleanup () {
@@ -27,7 +30,7 @@ function cleanup () {
 }
 trap cleanup EXIT SIGTERM
 
-# setup coloring if tput available 
+# setup coloring if tput available
 hl=
 rs=
 if [ ! -z $( command -v tput ) ]; then
@@ -35,43 +38,38 @@ if [ ! -z $( command -v tput ) ]; then
     rs=$( tput sgr0 )
 fi
 
-# parse cmd line 
-while getopts "hi:t:c:" opt; do
+# parse cmd line
+while getopts "hi:t:c:p:" opt; do
     case "$opt" in
-    i)
-        INFILE="$OPTARG"
-        ;;
-	t)  HFILE="$OPTARG"
-		;;
-    c)  CMDLIST="$OPTARG"
-        ;;
-	h)  show_help
-		;;
-	*)	echo "Illegal argument."; show_help
-		;;
+    i) INFILE="$OPTARG";;
+	t) HFILE="$OPTARG";;
+    c) CMDLIST="$OPTARG";;
+	p) PREFIX="$OPTARG";;
+	h) show_help;;
+	*) echo "Illegal argument."; show_help;;
 	esac
 done
 
-# check if there is a remaining argument 
+# check if there is a remaining argument
 shift $(expr $OPTIND - 1 )
-# if it's a number use it as preselection 
+# if it's a number use it as preselection
 [ $# -gt 0 ] && [[ "$1" =~ ^[0-9]+$ ]] && PRESELECTION="$1"
 
-# check settings 
+# check settings
 [ -z "$INFILE" ] && [ -z "$CMDLIST" ] && { echo "No input."; show_help; }
-[ ! -z "$INFILE" ] && [ ! -e "$INFILE" ] && { 
+[ ! -z "$INFILE" ] && [ ! -e "$INFILE" ] && {
 echo "Input file does not exist."; show_help; }
 
 # ==============================================================================
-# MAIN PROCESSING 
+# MAIN PROCESSING
 # ==============================================================================
 
 [ ! -z "$INFILE" ] && cat "$INFILE" | grep -v -e "^[[:space:]]$" \
->> $tmplist # add cmds from file 
+>> $tmplist # add cmds from file
 [ ! -z "$CMDLIST" ] && eval "$CMDLIST" | grep -v -e "^[[:space:]]$" \
->> $tmplist # add cmds from command 
+>> $tmplist # add cmds from command
 
-# strip away leading characters that are equal to all commands 
+# strip away leading characters that are equal to all commands
 awk 'NR==1{
        pos=split($0,a,"")
  }
@@ -86,15 +84,15 @@ awk 'NR==1{
     }
 NR!=FNR{
    print substr($0,pos)
-}' $tmplist $tmplist > $strippedlist 
+}' $tmplist $tmplist > $strippedlist
 
 printf "\033c"
-[ ! -z "$HFILE" ] && { cat $HFILE; echo ""; } # header if available 
+[ ! -z "$HFILE" ] && { cat $HFILE; echo ""; } # header if available
 
 i=1
 mapfile -t ARRAY < $tmplist
 while read line
-do 
+do
     printf "$hl[%03s%s]$rs\t${line}\n" $i
     i=$(($i + 1))
 done < "$strippedlist"
@@ -103,13 +101,13 @@ done < "$strippedlist"
 if [ ! -z $PRESELECTION ]
 then
     selection=$PRESELECTION
-else    
+else
     # .. otherwise let user select
-    echo 
+    echo
     echo -n "Enter selection: "
     read -r -e -n 2 selection
-    echo 
-    
+    echo
+
 fi
 sel_line=${ARRAY[$(( $selection - 1 ))]}
 
@@ -120,7 +118,7 @@ then
     echo "Invalid selection"
     exit 1
 fi
-jump=$( echo "$sel_line" | sed -e "s/&/\\\\&/g" ) # escape & 
+jump="$PREFIX $( echo "$sel_line" | sed -e "s/&/\\\\&/g" )" # escape &
 
 printf "\033c"
 
