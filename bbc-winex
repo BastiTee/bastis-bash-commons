@@ -1,0 +1,27 @@
+#!/bin/bash
+# ==============================================================================
+# WINEX (BASTI's BASH COMMONS)
+# Windows explorer integration for Cygwin. Run
+# bbc-winex <path> to open linux-like path in Windows explorer.
+# If path is a file, it will be selected in explorer.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+[ -z $( command -v explorer ) ] && { echo "No explorer on path."; exit 1; }
+[ -z "$1" ] && { echo "No path provided."; exit 1; }
+path="$1" # readability
+path=$( cygpath -u "$path" ) # for windows paths as input
+path=$( readlink -f "$path" ) # get abs path
+[ ! -e "$path" ] && { echo "Path does not exist."; exit 1; }
+[ -d "$path" ] && isdir=1 || isdir=0 # check for dir
+path=$( cygpath -w "$path" ) # create windows path
+[ $isdir == 1 ] && {
+	echo "Opening directory in explorer..."
+	explorer "$path"
+	exit 0
+} || {
+	echo "Selecting file in explorer..."
+	explorer /select,"$path"
+	exit 0
+}

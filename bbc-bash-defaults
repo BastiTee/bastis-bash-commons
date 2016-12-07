@@ -8,21 +8,21 @@
 
 ENVCHECK=1
 for command in dirname sleep date; do
-    [ -z $( command -v $command ) ] && { 
+    [ -z $( command -v $command ) ] && {
         echo "ERROR: '${command}' not available."
         ENVCHECK=0
         }
 done
 [ $ENVCHECK == 0 ] && { echo "Environment test failed. Will not source BBC."; return; }
 
-# Find path to script 
+# Find path to script
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Make sure this only gets sourced once
 [[ -z ${USER_BASHRC} ]] && USER_BASHRC="1" || return
 
 # = BASIC BASH SETTINGS ========================================================
 
-# Extend path with bash commons 
+# Extend path with bash commons
 PATH=${PATH}:${SCRIPTDIR}
 
 # If not running interactively, don't do anything
@@ -67,7 +67,7 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# COLORED PROMT 
+# COLORED PROMT
 # ===========================================================
 
 # set a fancy prompt (non-color, unless we know we "want" color)
@@ -119,7 +119,7 @@ alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --ex
 
 # Find out location of sourced default file ..
 if [ ! -v ${SCRIPTDIR} ]; then
-	# .. and if successful source bash commons functions as well	
+	# .. and if successful source bash commons functions as well
 	source ${SCRIPTDIR}/bbc
 	echo "Sourcing basti's bash commons functions successful."
 	# Aliases for quickly accessing commons functions
@@ -132,6 +132,7 @@ if [ ! -v ${SCRIPTDIR} ]; then
     alias c="clear"
     alias bb="bbc-bb"
 	alias gita="bbc-git-all"
+    alias winex="bbc-winex"
 fi
 
 # FINALIZATION
