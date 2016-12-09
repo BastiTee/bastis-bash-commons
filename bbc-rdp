@@ -1,0 +1,36 @@
+#!/bin/bash
+# ==============================================================================
+# RDP (BASTI's BASH COMMONS)
+# xfreedrp wrapper with some good default values.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+function show_help () {
+	[ ! -z "$1" ] && echo "$1"
+cat << EOF
+
+Usage: $( basename $0 ) -h [HOSTNAME] -u [USERNAME]
+  [HOSTNAME]      Target host name or IP-address
+  [USERNAME]      Username ([user] or [domain]\\[user] is allowed)
+EOF
+	exit 1
+}
+
+while getopts "h:u:p:" opt; do
+    case "$opt" in
+    h) HOST=$OPTARG;;
+	u) USERNAME=$OPTARG;;
+	p) PASSWORD=$OPTARG;;
+	*) show_help "Illegal argument.";;
+	esac
+done
+[ -z "$HOST" ] && show_help "Hostname not set."
+[ -z "$USERNAME" ] && show_help "Username not set."
+
+COMMAND="xfreerdp /v:${HOST} /u:${USERNAME} /w:1280 /h:900 +smart-sizing \
++fonts +aero +clipboard"
+[ ! -z $PASSWORD ] && { COMMAND="$COMMAND /p:$PASSWORD"; BG=1; }
+echo $COMMAND
+
+[ $BG == 1 ] && { eval $COMMAND & } || { eval $COMMAND; }
