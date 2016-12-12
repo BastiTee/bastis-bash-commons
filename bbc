@@ -89,6 +89,22 @@ $@ || return $?
 
 }
 
+function bbc-unzipd () {
+	init-help-output "$FUNCNAME" "Unzip multiple ZIP files to subdirectories\
+of same name.[1] Zip file(s)." \
+$@ || return $?
+	[ $# == 0 ] && return
+	for f in $@; do
+		unzip -t $f 2> /dev/null > /dev/null # test archive
+		[ $? == 0 ] && {
+			bname=$( basename $f .zip )
+			unzip $f -d ${bname}.$(bbc-get-datetime)
+		} || {
+			echo "$f is broken or not a zip-compressed file."
+		}
+	done
+}
+
 function bbc-zip-subfolders() {
     init-help-output "$FUNCNAME" "Zips the content of all immediate sub-\
 directories to ZIP-files with the same name." $@ || return $?
@@ -232,7 +248,7 @@ pattern.[1] Pattern." $@ || return $?
 
 	[ -z "$1" ] && return 0
 	ps -ef | grep "$1" | grep -v grep | awk '{print $2}' |\
-	while read pid; do kill -9 $pid; done | wc -l 
+	while read pid; do kill -9 $pid; done | wc -l
 }
 
 
