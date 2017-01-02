@@ -133,6 +133,7 @@ if [ ! -v ${SCRIPTDIR} ]; then
     alias bb="bbc-bb"
 	alias gita="bbc-git-all"
     alias winex="bbc-winex"
+	alias psg="bbc-ps-ef-grep"
 fi
 
 # FINALIZATION

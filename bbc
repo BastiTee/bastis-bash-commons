@@ -42,6 +42,15 @@ runs it. This comes in handy if you are unsure whether a tool exists.\
 # PRODUCTIVITY UTILITIES
 # ==============================================================================
 
+function bbc-ps-ef-grep () {
+   	init-help-output "$FUNCNAME" "A convenience function to simply use the ps \
+command along with grep and some formatting.[1] Grep pattern." \
+$@ || return $?
+
+    [ $# -le 0 ] && { echo "No search pattern provided.";return 1; }
+	ps -ef | grep -e "$1" -e "^UID"  | grep -v grep | cut -c 1-$( tput cols )
+}
+
 function bbc-calc () {
     	init-help-output "$FUNCNAME" "A convenience wrapper for bc. [1] .. [n] \
 The arithmetical problem you want to solve." \
