@@ -1,0 +1,13 @@
+#!/bin/bash
+# Based on https://www.thomas-krenn.com/de/wiki/Perl_warning_Setting_locale_failed_unter_Debian
+
+[ -z $( command -v perl ) ] && { echo "no perl found."; exit 1; }
+error_msg=$( perl --version 2>&1 | grep -i "please check that your locale settings" )
+[ -z "$error_msg" ] && { echo "fix not necessary."; exit 1; }
+[ $( whoami ) != "root" ] && { echo "script needs root privileges."; exit 1; }
+locale-gen en_US.UTF-8 de_DE.UTF-8
+export LANGUAGE=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+dpkg-reconfigure locales
+
