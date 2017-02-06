@@ -102,6 +102,11 @@ echo -e "-- options:     $FILTEROPT \"$FILTER\"" | grep -v " \"\""
     echo $procpid > $PIDFILE
     echo "-- capture-pid: $procpid @ $PIDFILE"
     # setup a monitor to watch the capture with the given display filters
-    tail -c +0 -f $TMPFILE | tshark $FILTEROPT "$FILTER" -r -
+    [ -z "$FILTER" ] && {
+        tail -c +0 -f $TMPFILE | tshark -r -
+    } || {
+        tail -c +0 -f $TMPFILE | tshark $FILTEROPT "$FILTER" -r -
+    }
+
 
 }
