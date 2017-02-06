@@ -33,4 +33,4 @@ COMMAND="xfreerdp /v:${HOST} /u:${USERNAME} /w:1280 /h:900 +smart-sizing \
 [ ! -z $PASSWORD ] && { COMMAND="$COMMAND /p:$PASSWORD"; BG=1; }
 echo $COMMAND
 
-[ $BG == 1 ] && { eval $COMMAND & } || { eval $COMMAND; }
+[ "$BG" == 1 ] && { eval "$COMMAND" & } || { eval "$COMMAND"; }

@@ -1,0 +1,54 @@
+#!/bin/bash
+# ==============================================================================
+# TSHARK (BASTI's BASH COMMONS)
+# A small frontend for more convenience when using tshark.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+FILTER=""
+GRAPHICAL=0
+EXEC="tshark"
+IPADDR=$( ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' |\
+ cut -f1  -d'/' ) # guess ip address
+
+[ -z $( command -v tshark ) ] && { echo "tshark not installed.\n"; exit 1; }
+[ -z $( command -v wireshark ) ] && { echo "wireshark not present.\n"; exit 1; }
+
+help () {
+[ ! -z "$1" ] && echo -e "\n$1\n"
+cat << EOF
+Usage:
+    $( basename $0 ) -g -Y <DF>
+
+Help Options:
+    -h            Show help options
+    -g            Use graphical wireshark instead of tshark
+    -Y <DF>       Apply display filter
+
+EOF
+exit 1
+}
+
+while getopts "hgY:m" opt; do
+    case "$opt" in
+    g)  GRAPHICAL=1 ;;
+	Y)  FILTER=$OPTARG ;;
+    m)  MEONLY="ip.src == $IPADDR" ;;
+    h)  help ;;
+    *)  help ;;
+	esac
+done
+
+[ $GRAPHICAL == 1 ] && EXEC="wireshark -k"
+[ ! -z "$FILTER" ] && FILTEROPT="-Y"
+[ ! -z "$FILTER" ] && [ ! -z "$MEONLY" ] && FILTER="$FILTER and $MEONLY"
+[ -z "$FILTER" ] && [ ! -z "$MEONLY" ] && FILTER="$MEONLY"
+
+echo "-- command:   $EXEC"
+echo "-- ip-addr:   $IPADDR"
+echo "-- filter:    $FILTER"
+echo "-- filteropt: $FILTEROPT"
+echo "-- invoking:  $EXEC $FILTEROPT '$FILTER'"
+
+$EXEC $FILTEROPT "$FILTER"
