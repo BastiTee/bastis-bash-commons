@@ -24,31 +24,31 @@ Usage:
 Help Options:
     -h            Show help options
     -g            Use graphical wireshark instead of tshark
-    -Y <DF>       Apply display filter
+    -y <DF>       Apply manual display filter
+    -m            Append local IP address to display filters
+    -n            Append network protocol filters to display filters
 
 EOF
 exit 1
 }
 
-while getopts "hgY:m" opt; do
+while getopts "hgy:mn" opt; do
     case "$opt" in
     g)  GRAPHICAL=1 ;;
-	Y)  FILTER=$OPTARG ;;
-    m)  MEONLY="ip.src == $IPADDR" ;;
+	y)  FILTER=$OPTARG ;;
+    m)  DF_IP="ip.src == $IPADDR" ;;
+    n)  DF_NOISE="not (icmp||icmpv6||arp||dns||stp||llmnr||igmp||nbns||mdns||lldp||udp.dstport==1900||udp.port==67||udp.port==68)" ;;
     h)  help ;;
     *)  help ;;
 	esac
 done
 
 [ $GRAPHICAL == 1 ] && EXEC="wireshark -k"
+# setup display filters
+FILTER="$FILTER§$DF_IP§$DF_NOISE"
+FILTER=$( sed -r -e "s/^[ ]+//" -e "s/[ ]+$//" -e "s/§+/§/" \
+-e "s/^§//" -e "s/§$//" -e "s/§/ and /g" <<< "$FILTER" )
 [ ! -z "$FILTER" ] && FILTEROPT="-Y"
-[ ! -z "$FILTER" ] && [ ! -z "$MEONLY" ] && FILTER="$FILTER and $MEONLY"
-[ -z "$FILTER" ] && [ ! -z "$MEONLY" ] && FILTER="$MEONLY"
 
-echo "-- command:   $EXEC"
-echo "-- ip-addr:   $IPADDR"
-echo "-- filter:    $FILTER"
-echo "-- filteropt: $FILTEROPT"
-echo "-- invoking:  $EXEC $FILTEROPT '$FILTER'"
-
+sed -e "s/ \"\"$//" <<< $( echo "$EXEC $FILTEROPT \"$FILTER\"" )
 $EXEC $FILTEROPT "$FILTER"
