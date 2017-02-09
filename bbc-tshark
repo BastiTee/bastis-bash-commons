@@ -107,6 +107,4 @@ echo -e "-- options:     $FILTEROPT \"$FILTER\"" | grep -v " \"\""
     } || {
         tail -c +0 -f $TMPFILE | tshark $FILTEROPT "$FILTER" -r -
     }
-
-
 }
