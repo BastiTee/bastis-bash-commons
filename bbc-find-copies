@@ -1,0 +1,25 @@
+#!/bin/bash
+
+tf=$( mktemp )
+
+[ -z "$1" ] && { echo "no dir given."; exit 1; }
+[ ! -d "$1" ] && { echo "given path is no dir."; exit 1; }
+idir="$( readlink -f "$1")"
+cd "$idir"
+
+
+find -type f | sort -r | while read f
+do
+    md5=$( md5sum "$f" | cut -d" " -f1 )
+    if [ -z "$( grep $md5 $tf | head -n1 )" ]
+    then
+        echo "$f"
+        echo "$md5" >> $tf
+    else
+        echo "--- $f"
+    fi
+
+done
+
+rm $tf
+
