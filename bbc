@@ -48,7 +48,7 @@ command along with grep and some formatting.[1] Grep pattern." \
 $@ || return $?
 
     [ $# -le 0 ] && { echo "No search pattern provided.";return 1; }
-	ps -ef | grep -e "$1" -e "^UID"  | grep -v grep | cut -c 1-$( tput cols )
+	ps -ef | grep -i -e "$1" -e "^UID"  | grep -v grep | cut -c 1-$( tput cols )
 }
 
 function bbc-calc () {
