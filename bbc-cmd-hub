@@ -86,7 +86,7 @@ NR!=FNR{
    print substr($0,pos)
 }' $tmplist $tmplist > $strippedlist
 
-printf "\033c"
+# printf "\033c"
 [ ! -z "$HFILE" ] && { cat $HFILE; echo ""; } # header if available
 
 i=1
