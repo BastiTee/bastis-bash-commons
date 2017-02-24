@@ -9,12 +9,13 @@ function show_help () {
 cat << EOF
 Create a selection interface from a list of commands.
 
-Usage: $( basename $0) [-i <CMD_FILE>] [-c <CMD_LIST>] [-t <HEADER_FILE>]
+Usage: $( basename $0) [-i <CMD_FILE>] [-c <CMD_LIST>] [-t <HEADER_FILE>] [-s]
 
     -i <CMD_FILE>     Input file holding bash commands.
     -c <CMD_LIST>     Input command generating list entries.
     -t <HEADER_FILE>  An optional file holding a header to be printed.
     -p <PREFIX>       Optional command prefix (eg. 'java -jar')
+    -s                Don't clear screen
 
 Note that either -i or -c must be set.
 
@@ -39,14 +40,15 @@ if [ ! -z $( command -v tput ) ]; then
 fi
 
 # parse cmd line
-while getopts "hi:t:c:p:" opt; do
+while getopts "hi:t:c:p:s" opt; do
     case "$opt" in
     i) INFILE="$OPTARG";;
-	t) HFILE="$OPTARG";;
+    t) HFILE="$OPTARG";;
     c) CMDLIST="$OPTARG";;
-	p) PREFIX="$OPTARG";;
-	h) show_help;;
-	*) echo "Illegal argument."; show_help;;
+    p) PREFIX="$OPTARG";;
+    s) DONTCLEAR=1 ;;
+    h) show_help;;
+    *) echo "Illegal argument."; show_help;;
 	esac
 done
 
@@ -86,7 +88,7 @@ NR!=FNR{
    print substr($0,pos)
 }' $tmplist $tmplist > $strippedlist
 
-# printf "\033c"
+[ ! $DONTCLEAR ] && printf "\033c"
 [ ! -z "$HFILE" ] && { cat $HFILE; echo ""; } # header if available
 
 i=1
@@ -120,7 +122,7 @@ then
 fi
 jump="$PREFIX $( echo "$sel_line" | sed -e "s/&/\\\\&/g" )" # escape &
 
-# printf "\033c"
+[ ! $DONTCLEAR ] && printf "\033c"
 
 echo "Calling command: $jump"
 eval "$jump"
