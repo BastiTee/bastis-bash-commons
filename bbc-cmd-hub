@@ -120,7 +120,7 @@ then
 fi
 jump="$PREFIX $( echo "$sel_line" | sed -e "s/&/\\\\&/g" )" # escape &
 
-printf "\033c"
+# printf "\033c"
 
 echo "Calling command: $jump"
 eval "$jump"
