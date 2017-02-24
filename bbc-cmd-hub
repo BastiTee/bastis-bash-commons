@@ -120,7 +120,7 @@ then
     echo "Invalid selection"
     exit 1
 fi
-jump="$PREFIX$( echo "$sel_line" | sed -e "s/&/\\\\&/g" )" # escape &
+jump="$PREFIX $( echo "$sel_line" | sed -e "s/&/\\\\&/g" )" # escape &
 
 [ ! $DONTCLEAR ] && printf "\033c"
 
