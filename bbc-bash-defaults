@@ -112,7 +112,7 @@ alias l="ll"
 alias ..="cd .."
 alias ...="cd ../../"
 alias apt="apt-get"
-alias aptdate="sudo bash -c \"apt-get update && apt-get upgrade -y && apt-get autoremove -y && apt-get autoclean -y\""
+alias aptdate="sudo bash -c \"apt-get update && apt-get upgrade -y && apt-get autoremove --purge -y && apt-get autoclean -y\""
 
 # find pattern in code
 alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --exclude-dir=bin"
