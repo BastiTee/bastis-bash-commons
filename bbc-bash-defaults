@@ -115,6 +115,7 @@ alias apt="apt-get"
 alias aptdate="sudo bash -c \"apt-get update && apt-get upgrade -y && apt-get autoremove --purge -y && apt-get autoclean -y\""
 alias dql="dpkg-query --show --showformat='\${db:Status-Abbrev} \${binary:Package} \${Version}\n'"
 alias gprgp="git pull -r && git push"
+alias _="nautilus . 2> /dev/null"
 
 # find pattern in code
 alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --exclude-dir=bin"
@@ -136,6 +137,8 @@ if [ ! -v ${SCRIPTDIR} ]; then
 	alias gita="bbc-git-all"
     alias winex="bbc-winex"
 	alias psg="bbc-ps-ef-grep"
+    alias rt="bbc-rename-tab"
+    alias rdp="bbc-rpd"
 fi
 
 # FINALIZATION
