@@ -134,7 +134,7 @@ if [ ! -v ${SCRIPTDIR} ]; then
 	alias clear="bbc-clear"
     alias c="clear"
     alias bb="bbc-bb"
-	alias gita="bbc-git-all"
+	alias gita="clear && bbc-git-all"
     alias winex="bbc-winex"
 	alias psg="bbc-ps-ef-grep"
     alias rt="bbc-rename-tab"

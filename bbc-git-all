@@ -3,9 +3,12 @@ from __future__ import with_statement
 
 import os
 import re
+import sys
 from threading import Thread, Lock
 from queue import Queue
 import subprocess
+
+LOCK = Lock()
 
 
 class Worker(Thread):
@@ -39,34 +42,28 @@ class ThreadPool:
     def wait_completion(self):
         self.tasks.join()
 
-    def is_empty(self):
-        return self.tasks.empty()
-
-p_lock = Lock()
-
 
 def run_git(git_dir, arglist):
 
     git_dir = os.path.basename(git_dir)
-    output = subprocess.check_output(['git', 'status'], shell=False,
-    cwd=git_dir).decode('utf-8')
-    # postprocess output
+    output = subprocess.check_output(arglist,
+                                     cwd=git_dir).decode('utf-8')
     output = re.sub('[\n]+', '\n', output)
     output = re.sub('nothing to commit, working directory clean', '', output)
     output = re.sub('^\n', '', output)
     output = re.sub('\n$', '', output)
-    global p_lock
-    with p_lock:
+    global LOCK
+    with LOCK:
         if ('on branch master\nyour branch is up-to-date' in output.lower()
-        and not 'untracked files' in output.lower()
-        and not 'changes not staged' in output.lower()):
+            and not 'untracked files' in output.lower()
+                and not 'changes not staged' in output.lower()):
             print(
-            '\x1b[0;32;40m{}\x1b[0m'.format(
-            git_dir.upper()))
+                '\x1b[0;32;40m{}\x1b[0m'.format(
+                    git_dir.upper()))
         else:
             print(
-            '\x1b[0;31;40m--- {}\x1b[0m\n{}'.format(
-            git_dir.upper(),output))
+                '\x1b[0;31;40m--- {}\x1b[0m\n{}'.format(
+                    git_dir.upper(), output))
 
 git_dirs = []
 for dirname, _, filenames in os.walk('.'):
@@ -79,7 +76,7 @@ for dirname, _, filenames in os.walk('.'):
 
 curr_dir = os.path.abspath(os.getcwd())
 pool = ThreadPool(10)
-arglist = ''
+sys.argv[0] = 'git'
 for git_dir in git_dirs:
-    pool.add_task(run_git, git_dir, arglist)
+    pool.add_task(run_git, git_dir, sys.argv)
 pool.wait_completion()
