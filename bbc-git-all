@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# ==============================================================================
+# GIT-ALL (BASTI's BASH COMMONS)
+# Run a git command concurrently on any repo in or below the current path.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
 from __future__ import with_statement
 
 import os
@@ -12,8 +19,9 @@ except ImportError:  # python 2.x fallback
 import subprocess
 
 MAX_THREADS = 10
-MAX_SUBLEVEL = 3 # 0 = only current folder
+MAX_SUBLEVEL = 3  # 0 = only current folder
 LOCK = Lock()
+
 
 class Worker(Thread):
 
