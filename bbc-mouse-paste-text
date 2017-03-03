@@ -10,4 +10,4 @@
 [ -z $( command -v xclip ) ] && { echo "xclip missing."; exit 1; }
 [ -z $( command -v xdotool ) ] && { echo "xdotool missing."; exit 1; }
 [ -z "$1" ] && { echo "no phrase provided."; exit 1; }
-echo "$1" | xclip && sleep 0.05 && xdotool mousedown 2 mouseup 2
+printf "$1" | xclip && sleep 0.05 && xdotool mousedown 2 mouseup 2
