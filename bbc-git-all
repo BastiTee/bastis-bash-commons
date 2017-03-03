@@ -45,9 +45,13 @@ class ThreadPool:
 
 def run_git(git_dir, arglist):
 
-    git_dir = os.path.basename(git_dir)
-    output = subprocess.check_output(arglist,
-                                     cwd=git_dir).decode('utf-8')
+    git_dir_title = os.path.basename(git_dir)
+    try:
+        output = subprocess.check_output(
+            arglist, cwd=git_dir, stderr=subprocess.STDOUT).decode('utf-8')
+    except subprocess.CalledProcessError as grepexc:
+        output = grepexc.output.decode('utf-8')
+
     output = re.sub('[\n]+', '\n', output)
     output = re.sub('nothing to commit, working directory clean', '', output)
     output = re.sub('^\n', '', output)
@@ -59,11 +63,11 @@ def run_git(git_dir, arglist):
                 and not 'changes not staged' in output.lower()):
             print(
                 '\x1b[0;32;40m{}\x1b[0m'.format(
-                    git_dir.upper()))
+                    git_dir_title.upper()))
         else:
             print(
                 '\x1b[0;31;40m--- {}\x1b[0m\n{}'.format(
-                    git_dir.upper(), output))
+                    git_dir_title.upper(), output))
 
 git_dirs = []
 for dirname, _, filenames in os.walk('.'):
