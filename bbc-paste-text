@@ -1,0 +1,14 @@
+#!/bin/bash
+# ==============================================================================
+# PASTE-TEXT (BASTI's BASH COMMONS)
+# Writes the provided text snippet to the primary clipboard and
+# immediately invokes ctrl+v, so you'll be able to
+# assign keyboard shortcuts to text templates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+[ -z $( command -v xclip ) ] && { echo "xclip missing."; exit 1; }
+[ -z $( command -v xdotool ) ] && { echo "xdotool missing."; exit 1; }
+[ -z "$1" ] && { echo "no phrase provided."; exit 1; }
+printf "$1" | xclip -sel c && sleep 0.2 && xdotool key ctrl+v
