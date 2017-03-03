@@ -1,39 +1,85 @@
-#!/bin/bash
-# ==============================================================================
-# GIT ALL (BASTI's BASH COMMONS)
-# A simple wrapper to invoke a git command on any git repository in a 
-# child folder (non-recursive). 
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# ==============================================================================
+#!/usr/bin/python3
+from __future__ import with_statement
 
-[ $# == 0 ] && { echo "No git argument provided."; exit 1; }
-gitcmd=$1
+import os
+import re
+from threading import Thread, Lock
+from queue import Queue
+import subprocess
 
-gitsummary () {
-    absdir=$( readlink -f $1 )
-    tmpf=$( mktemp )
-    dirn=$( basename $( dirname $absdir ) )
-    printf "=%.0s" $( seq 1 ${#dirn} ) >> $tmpf
-    echo -e "\n${dirn}" >> $tmpf
-    printf "=%.0s" $( seq 1 ${#dirn} ) >> $tmpf
-    echo -e "\n" >> $tmpf
-    currdir=$( pwd )
-    cd $absdir
-    cd ..
-    git $2 2>&1 >> $tmpf
-    echo "" >> $tmpf
-    cd $currdir
-    echo "$tmpf"
-}
-export -f gitsummary
-    
-tmpfiles=$( mktemp )
-{
-for dir in $( find -maxdepth 2 -type d -name ".git" ); do \
-echo "$dir"; done | xargs -P10 -I {} bash -c 'gitsummary $1 $2' _ {} $gitcmd
-} > $tmpfiles 
 
-clear
-while read tmpfile; do cat $tmpfile; rm $tmpfile; done < $tmpfiles
-rm $tmpfiles 
+class Worker(Thread):
+
+    def __init__(self, tasks):
+        Thread.__init__(self)
+        self.tasks = tasks
+        self.daemon = True
+        self.start()
+
+    def run(self):
+        while True:
+            func, args, kargs = self.tasks.get()
+            try:
+                func(*args, **kargs)
+            except Exception as e:
+                print(e)
+            self.tasks.task_done()
+
+
+class ThreadPool:
+
+    def __init__(self, num_threads):
+        self.tasks = Queue(num_threads)
+        for _ in range(num_threads):
+            Worker(self.tasks)
+
+    def add_task(self, func, *args, **kargs):
+        self.tasks.put((func, args, kargs))
+
+    def wait_completion(self):
+        self.tasks.join()
+
+    def is_empty(self):
+        return self.tasks.empty()
+
+p_lock = Lock()
+
+
+def run_git(git_dir, arglist):
+
+    git_dir = os.path.basename(git_dir)
+    output = subprocess.check_output(['git', 'status'], shell=False,
+    cwd=git_dir).decode('utf-8')
+    # postprocess output
+    output = re.sub('[\n]+', '\n', output)
+    output = re.sub('nothing to commit, working directory clean', '', output)
+    output = re.sub('^\n', '', output)
+    output = re.sub('\n$', '', output)
+    global p_lock
+    with p_lock:
+        if ('on branch master\nyour branch is up-to-date' in output.lower()
+        and not 'untracked files' in output.lower()
+        and not 'changes not staged' in output.lower()):
+            print(
+            '\x1b[0;32;40m{}\x1b[0m'.format(
+            git_dir.upper()))
+        else:
+            print(
+            '\x1b[0;31;40m--- {}\x1b[0m\n{}'.format(
+            git_dir.upper(),output))
+
+git_dirs = []
+for dirname, _, filenames in os.walk('.'):
+    for filename in filenames:
+        path = os.path.join(dirname, filename)
+        match = re.match('.*\.git/HEAD.*', path, re.IGNORECASE)
+        if match != None:
+            git_dirs.append(
+                os.path.abspath(os.path.dirname(os.path.dirname(path))))
+
+curr_dir = os.path.abspath(os.getcwd())
+pool = ThreadPool(10)
+arglist = ''
+for git_dir in git_dirs:
+    pool.add_task(run_git, git_dir, arglist)
+pool.wait_completion()
