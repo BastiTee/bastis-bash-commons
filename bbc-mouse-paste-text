@@ -1,8 +1,9 @@
 #!/bin/bash
 # ==============================================================================
 # MOUSE-PASTE-TEXT (BASTI's BASH COMMONS)
-# Pastes the provided text snippet out via the mouse-clipboard. Useful to
-# bind shortcuts to generate text snippets.
+# Writes the provided text snippet to the mouse-button clipboard and
+# immediately invokes mouse middle-button, so you'll be able to
+# assign keyboard shortcuts to text templates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
