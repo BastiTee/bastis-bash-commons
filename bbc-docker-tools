@@ -5,9 +5,19 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
+function show_help () {
+cat << EOF
+Following jobs are implemented:
+   rme - Remove exited containers from history.
+   rmu - Remove untagged images from database.
+EOF
+exit 1
+}
+
 # parse cmd line
-while getopts "" opt; do
+while getopts "h" opt; do
     case "$opt" in
+    h) show_help ;;
     *) echo "Illegal argument."; exit 1;;
 	esac
 done
@@ -18,13 +28,17 @@ shift $(expr $OPTIND - 1 )
 
 function rm-exited () {
     echo "-- Removing exited containers from history."
-    docker ps -a | grep "Exited (0)" | awk '{ print $1 }' | xargs -r docker rm
+    docker ps -a | grep "Exited (" | awk '{ print $1 }' | xargs -r docker rm
+    echo "-- Done."
+    docker ps -a
 }
 
 function rm-untagged () {
     echo "-- Removing untagged images from image database."
     docker images | grep -e "^<none>[ ]\{1,\}<none>" | awk '{print $3}' |\
     xargs -r docker rmi -f
+    echo "-- Done."
+    docker images
 }
 
 if [ "$JOB" == "rme" ]
@@ -34,6 +48,5 @@ elif [ "$JOB" == "rmu" ]
 then
     rm-untagged
 else
-    echo "Unknown job type."
-    exit 1
+    show_help
 fi
