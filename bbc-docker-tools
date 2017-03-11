@@ -1,0 +1,39 @@
+# ==============================================================================
+# DOCKER TOOLS
+# Assembly of recurring docker cmd-line tasks.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+# parse cmd line
+while getopts "" opt; do
+    case "$opt" in
+    *) echo "Illegal argument."; exit 1;;
+	esac
+done
+
+# check if there is an remaining argument and set it as job type
+shift $(expr $OPTIND - 1 )
+[ $# -gt 0 ] && JOB="$1"
+
+function rm-exited () {
+    echo "-- Removing exited containers from history."
+    docker ps -a | grep "Exited (0)" | awk '{ print $1 }' | xargs -r docker rm
+}
+
+function rm-untagged () {
+    echo "-- Removing untagged images from image database."
+    docker images | grep -e "^<none>[ ]\{1,\}<none>" | awk '{print $3}' |\
+    xargs -r docker rmi -f
+}
+
+if [ "$JOB" == "rme" ]
+then
+    rm-exited
+elif [ "$JOB" == "rmu" ]
+then
+    rm-untagged
+else
+    echo "Unknown job type."
+    exit 1
+fi
