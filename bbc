@@ -47,8 +47,13 @@ function bbc-ps-ef-grep () {
 command along with grep and some formatting.[1] Grep pattern." \
 $@ || return $?
 
-    [ $# -le 0 ] && { echo "No search pattern provided.";return 1; }
-	ps -ef | grep -i -e "$1" -e "^UID"  | grep -v grep | cut -c 1-$( tput cols )
+    {
+        [ $# -le 0 ] && {
+            ps -ef
+        } || {
+            ps -ef | grep -i -e "$1" -e "^UID"
+        }
+    } | grep -v grep | cut -c 1-$( tput cols )
 }
 
 function bbc-calc () {
