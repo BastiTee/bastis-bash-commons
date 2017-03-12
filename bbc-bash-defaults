@@ -98,6 +98,29 @@ else
 fi
 unset color_prompt force_color_prompt
 
+if [ "$TERM" = "linux" ]; then
+    /bin/echo -e "
+    \e]P0262524
+    \e]P1d78787
+    \e]P2afd787
+    \e]P3ffffaf
+    \e]P487afdf
+    \e]P5dfafdf
+    \e]P6afdfdf
+    \e]P7e2e4e6
+    \e]P881807f
+    \e]P9d78787
+    \e]PAafd787
+    \e]PBffffaf
+    \e]PC87afdf
+    \e]PDdfafdf
+    \e]PEafdfdf
+    \e]PFe2e4e6
+    "
+    # get rid of artifacts
+    clear
+fi
+
 # ALIAS SETTINGS
 # ===========================================================
 
