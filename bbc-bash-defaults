@@ -161,7 +161,7 @@ if [ ! -v ${SCRIPTDIR} ]; then
     alias winex="bbc-winex"
 	alias psg="bbc-ps-ef-grep"
     alias rt="bbc-rename-tab"
-    alias rdp="bbc-rpd"
+    alias rdp="bbc-rdp"
 fi
 
 # FINALIZATION
