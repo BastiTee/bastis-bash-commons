@@ -6,7 +6,6 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
-HANDLE=
 DELETE=
 MAX_AGE_DAYS=3
 
@@ -14,26 +13,38 @@ function show_help () {
 	[ ! -z "$1" ] && echo "$1"
 cat << EOF
 
-Usage: $( basename $0 ) -t [HANDLE] -m [MAXD] -f
-  -t [HANDLE]    Twitter handle, e.g., @myhandle
-  -m [MAXD]      Maximum days to preserve (default: $MAX_AGE_DAYS)
-  -f             Actually delete tweets, don't just list the candidates.
+Usage: $( basename $0 ) -t [HANDLE] -m [MAXD] -f -e [IPATT_1] .. -e [IPATT_n]
+  -t [HANDLE]    Twitter handle, e.g., @myhandle.
+  -m [MAXD]      Maximum days to preserve (default: $MAX_AGE_DAYS).
+  -f             Actually delete tweets, don\'t just list the candidates.
+  -e [IPATT]     Removes tweets from results containing the given expressions.
+  -l [FILE]      Optional target logfile.
+
+Example: $( basename $0 ) -t @my_handle -m 3 -e "#Yolo" -e "@another_handle" -l /var/log/my.log
 
 EOF
 	exit 1
 }
 
-while getopts "t:m:f" opt; do
+function log() {
+	[ ! -z $LOG_FILE ] && echo $@ >> $LOG_FILE
+	echo $@
+}
+
+
+while getopts "t:m:e:fl:" opt; do
     case "$opt" in
     t) HANDLE="$OPTARG";;
 	m) MAX_AGE_DAYS=$OPTARG;;
+	e) IPATT+=("$OPTARG");;
     f) DELETE=1;;
+	l) LOG_FILE="$OPTARG";;
 	*) show_help "Illegal argument.";;
 	esac
 done
 
 [ -z $( command -v t ) ] && {
-    echo "'t' gem (https://github.com/sferik/t) not installed."
+    >&2 echo "'t' gem (https://github.com/sferik/t) not installed."
     exit 1
 }
 [ -z "$HANDLE" ] && show_help "No twitter handle provided."
@@ -42,16 +53,19 @@ done
 
 now=$( date +%s )
 oldest=$(( $now - ( $MAX_AGE_DAYS * 24 * 60 * 60 ) ))
-# echo "-- oldest allowed: $oldest"
 
+log "--- $( date )"
 t timeline $HANDLE --csv --number 10000 | while read tweet; do
-	[ ! -z "$( echo $tweet | grep "#bastisite" )" ] && continue
-	[ ! -z "$( echo $tweet | grep "follow at own risk ")" ] && continue
-	[ ! -z "$( echo $tweet | grep -e "^ID" )" ] && continue
+	[ ! -z "$( echo $tweet | grep -e "^ID" )" ] && continue # remove header
+	ipatt_matched=0
+	for ipatt in "${IPATT[@]}"; do
+	    [ ! -z "$( echo $tweet | grep -e "$ipatt" )" ] && ipatt_matched=1
+	done
+	[ $ipatt_matched == 1 ] && continue
 	datetime=$( awk -F',' '{ print $2"\n" }' <<< $tweet )
 	datetime=$( date -d "$datetime" +%s )
 	[ $datetime -le $oldest ] && {
-		echo "--- $tweet"
+		log "+ $tweet"
 		id=$( sed -e "s/,.*//" <<< $tweet )
         [ "$DELETE" == 1 ] && t delete status -f $id
 	}
