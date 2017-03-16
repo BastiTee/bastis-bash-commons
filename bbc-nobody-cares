@@ -47,6 +47,7 @@ done
     >&2 echo "'t' gem (https://github.com/sferik/t) not installed."
     exit 1
 }
+TCOM=$( which t )
 [ -z "$HANDLE" ] && show_help "No twitter handle provided."
 [[ ! $MAX_AGE_DAYS =~ ^[0-9]+$ ]] && show_help "Age must be a number. D'uh!"
 [ ! $MAX_AGE_DAYS -ge 1 ] && show_help "Invalid maximum age. Must be >= 1."
@@ -54,8 +55,8 @@ done
 now=$( date +%s )
 oldest=$(( $now - ( $MAX_AGE_DAYS * 24 * 60 * 60 ) ))
 
-log "--- $( date )"
-t timeline $HANDLE --csv --number 10000 | while read tweet; do
+log "--- $( date ) - $TCOM - delete=$DELETE"
+$TCOM timeline $HANDLE --csv --number 10000 | while read tweet; do
 	[ ! -z "$( echo $tweet | grep -e "^ID" )" ] && continue # remove header
 	ipatt_matched=0
 	for ipatt in "${IPATT[@]}"; do
@@ -67,6 +68,7 @@ t timeline $HANDLE --csv --number 10000 | while read tweet; do
 	[ $datetime -le $oldest ] && {
 		log "+ $tweet"
 		id=$( sed -e "s/,.*//" <<< $tweet )
-        [ "$DELETE" == 1 ] && t delete status -f $id
+        [ "$DELETE" == 1 ] && $TCOM delete status -f $id
 	}
 done
+
