@@ -1,7 +1,7 @@
 #!/bin/bash
 # ==============================================================================
-# NOBODY CARES
-# A cronjobbable script to remove tweets older that x days.
+# DELETE OLD TWEETS
+# A cronjobbable script to remove tweets older that x days and matching pattern.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
