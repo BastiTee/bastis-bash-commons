@@ -124,6 +124,7 @@ fi
 # ALIAS SETTINGS
 # ===========================================================
 
+alias duh="sudo du -sh * 2> /dev/null | sort -rh"
 alias less="less -r" # raw control characters
 alias whence="type -a" # where, of a sort
 alias grep="grep --color" # colored grep

@@ -1,0 +1,36 @@
+#!/bin/bash
+
+sinkname="combined"
+
+# check root
+[ $( whoami ) == "root" ] && {
+    echo "-- please run as regular user."
+    exit 1
+}
+
+# check distribution
+dist=$( cat /etc/lsb-release 2> /dev/null | grep DISTRIB_RELEASE |\
+tr "=" " " | awk '{ print $2 }' )
+[ "$dist" != "16.04" ] && echo "-- warning: this was only tested in Ubuntu 16.04."
+
+# Restart pulseaudio
+# pulseaudio --kill && pulseaudio --start
+
+# find devices
+devices=$( pacmd list-sinks  | grep -e "name:" | grep -v $sinkname |\
+tr -d "<" | tr -d ">" | awk '{print $2}' | tr "\n" "," |\
+sed -r -e "s/[,]+$//" )
+
+echo "-- found devices: $devices"
+
+read -p "Create a sink for these devices? (y/n)" -n 1 -r
+echo "" # (optional) move to a new line
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    echo "-- creating sink"
+    pacmd load-module module-combine-sink sink_name=$sinkname slaves=$devices
+    echo "-- done. opening pavucontrol "
+    pavucontrol &
+else
+    echo "-- aborted"
+fi
