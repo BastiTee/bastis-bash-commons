@@ -25,6 +25,9 @@ source ${git_root}/bastis-bash-commons/bbc-bash-defaults
 export PATH=${PATH}:${git_root}/bastis-bash-commons:${git_root}/dockerfiles
 EOF
 
+# run some setups 
+sudo usermod -aG docker $(whoami)
+
 # invoke a new bash
 cd $home
 bash
