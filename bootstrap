@@ -27,6 +27,7 @@ EOF
 
 # run some setups 
 sudo usermod -aG docker $(whoami)
+sudo systemctl restart docker.service
 
 # invoke a new bash
 cd $home
