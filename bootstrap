@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run this by executing:
-# bash <(curl -s <url>)
+# bash <(curl -s https://raw.githubusercontent.com/BastiTee/bastis-bash-commons/master/bootstrap)
 
 # basic ubuntu setup
 sudo apt update
