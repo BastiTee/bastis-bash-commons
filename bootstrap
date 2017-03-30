@@ -1,0 +1,30 @@
+#!/bin/bash
+# Run this by executing:
+# bash <(curl -s <url>)
+
+# basic ubuntu setup
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y git vim docker.io readlink
+
+# get working environment
+cd ~
+home=$( readlink -f $( pwd ) )
+mkdir git
+cd git
+git_root=$( readlink -f $( pwd ) )
+git clone https://github.com/BastiTee/bastis-bash-commons.git
+git clone https://github.com/BastiTee/dockerfiles.git
+git clone https://github.com/BastiTee/bastis-ubersettings.git
+
+# link working environment
+cd ~/git/bastis-ubersettings/shell-rcs
+./link.sh
+cat << EOF > ~/.bashrc
+source ${git_root}/bastis-bash-commons/bbc-bash-defaults
+export PATH=${PATH}:${git_root}/bastis-bash-commons:${git_root}/dockerfiles
+EOF
+
+# invoke a new bash
+cd $home
+bash
