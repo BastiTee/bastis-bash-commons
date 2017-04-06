@@ -1,11 +1,17 @@
 #!/bin/bash
 # Run this by executing:
-# bash <(curl -s https://raw.githubusercontent.com/BastiTee/bastis-bash-commons/master/bootstrap)
+# bash <(wget -qO- https://raw.githubusercontent.com/BastiTee/bastis-bash-commons/master/bootstrap)
 
 # basic ubuntu setup
-sudo apt update
-sudo apt upgrade -y
-sudo apt install -y git vim docker.io readlink make htop
+sudo apt update && \
+sudo apt upgrade -y && \
+sudo apt install -y git vim docker.io gcc make htop curl && \
+
+# ssh keys 
+[ ! -f ~/.ssh/id_rsa.pub ] && {
+  ssh-keygen
+  cat ~/.ssh/id_rsa.pub
+}
 
 # get working environment
 cd ~
@@ -13,12 +19,15 @@ home=$( readlink -f $( pwd ) )
 mkdir git
 cd git
 git_root=$( readlink -f $( pwd ) )
-git clone https://github.com/BastiTee/bastis-bash-commons.git
-git clone https://github.com/BastiTee/dockerfiles.git
-git clone https://github.com/BastiTee/bastis-ubersettings.git
+for project in bastis-bash-commons dockerfiles ubersettings
+do
+  curl -sL -o ${project}.zip https://github.com/BastiTee/${project}/archive/master.zip
+  unzip ${project}.zip 
+  mv ${project}-master ${project}
+done
 
 # link working environment
-cd ~/git/bastis-ubersettings/shell-rcs
+cd ~/git/ubersettings/shell-rcs
 ./link.sh
 cat << EOF > ~/.bashrc
 source ${git_root}/bastis-bash-commons/bbc-bash-defaults
@@ -29,6 +38,5 @@ EOF
 sudo usermod -aG docker $(whoami)
 sudo systemctl restart docker.service
 
-# invoke a new bash
+# finish 
 cd $home
-bash
