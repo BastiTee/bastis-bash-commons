@@ -156,7 +156,7 @@ if [ ! -v ${SCRIPTDIR} ]; then
 	alias fakename="bbc-fakename"
 	alias szip="bbc-zip"
 	alias clear="bbc-clear"
-    alias c="clear"
+    alias c="bbc-calc"
     alias bb="bbc-bb"
 	alias gita="clear && bbc-git-all"
     alias winex="bbc-winex"
