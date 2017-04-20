@@ -55,7 +55,7 @@ TCOM=$( which t )
 now=$( date +%s )
 oldest=$(( $now - ( $MAX_AGE_DAYS * 24 * 60 * 60 ) ))
 
-log "--- $( date ) - $TCOM - delete=$DELETE"
+#log "--- $( date ) - $TCOM - delete=$DELETE"
 $TCOM timeline $HANDLE --csv --number 10000 | while read tweet; do
 	[ ! -z "$( echo $tweet | grep -e "^ID" )" ] && continue # remove header
 	ipatt_matched=0
