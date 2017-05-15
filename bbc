@@ -81,7 +81,7 @@ $@ || return $?
 
 }
 
-function bbc-zip () {
+function bbc-zip-secure () {
 	init-help-output "$FUNCNAME" "Straight-forward zipping with mandatory \
 AES-encryption and removal of source file/folder respectively source zip-file.\
 [1] Direction, either (p)ack or (u)npack. [2] Folder/file." \
@@ -100,7 +100,31 @@ $@ || return $?
         7za x "$2"
         [ $? == 0 ] && rm -rf "$2"
     fi
+}
 
+function bbc-zip () {
+	init-help-output "$FUNCNAME" "Straight-forward zipping of folders \
+and/or files.[1] Folder/file." \
+$@ || return $?
+
+	[ -z $( command -v zip ) ] && {
+		echo "ZIP not installed."
+		exit 1
+	}
+    [ ! -e "$1" ] && {
+		echo "File/folder not readable."
+		return 1;
+	}
+	src="$( readlink -f $1 )"
+	trg="$( basename $1 ).zip"
+	echo -e "packing from\n\t$src to\n\t$trg"
+	rmdir=$( bbc-yesno "Remove source folder $src after packing?" )
+
+	[ $rmdir == 1 ] && {
+		zip -r $trg $src && rm -rf $src
+	} || {
+		zip -r $trg $src
+	}
 }
 
 function bbc-unzipd () {
