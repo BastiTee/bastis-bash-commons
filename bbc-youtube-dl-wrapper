@@ -7,21 +7,48 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
-
 YOUTUBE_BIN="youtube-dl"
 FFMPEG_BIN="ffmpeg"
-[ -v "$( command -v $YOUTUBE_BIN )" ] && { echo "No $YOUTUBE_BIN present."; exit 1; }
-[ -v "$( command -v $FFMPEG_BIN )" ] && { echo "No $FFMPEG_BIN present."; exit 1; }
-DEBUG=0
-PLAYLIST_FOLDER="YOUTUBE"
-REFERENCE_FILE="${PLAYLIST_FOLDER}.txt"
+[ -v "$( command -v $YOUTUBE_BIN )" ] && {
+    echo "No $YOUTUBE_BIN present."
+    exit 1
+}
+[ -v "$( command -v $FFMPEG_BIN )" ] && {
+    echo "No $FFMPEG_BIN present."
+    exit 1
+}
 
-read -p "Enter youtube username: " USERNAME
-read -s -p "Enter youtube password: " PASSWORD
-echo ""
-read -p "Enter playlist id: " PLAYLIST
+function show_help () {
+    [ ! -z "$1" ] && echo "$1"
+cat << EOF
 
-clear
+Usage: $( basename $0 ) -p <PLAYLIST> (-a) (-o <FOLDER>)
+  -p <PLAYLIST>  Playlist ID
+  -a             Ask for YouTube authentication (for private playlists)
+  -o <FOLDER>    Alternative download folder
+EOF
+    exit 1
+}
+
+while getopts "h:p:ao:" opt; do
+    case "$opt" in
+        p) PLAYLIST=$OPTARG;;
+        a) ASK_AUTH=1;;
+        o) DL_FOLDER=$OPTARG;;
+        *) show_help "Illegal argument.";;
+    esac
+done
+
+[ -z "$PLAYLIST" ] && { show_help "Playlist ID not set."; }
+OUT_FOLDER=$PLAYLIST
+[ ! -z $DL_FOLDER ] && OUT_FOLDER=$DL_FOLDER
+mkdir -p $OUT_FOLDER
+
+[ "$ASK_AUTH" == 1 ] && {
+    read -p "Enter youtube username: " USERNAME
+    read -s -p "Enter youtube password: " PASSWORD
+    echo ""
+}
 
 function fix_names() {
     basename "$@" | sed -r \
@@ -64,35 +91,37 @@ function fix_names() {
 }
 
 function do_prename() {
-    echo "---- PRENAMING" 
-    find "${PLAYLIST_FOLDER}/MP3" -maxdepth 1 -type f | while read file; do
-        new_file="${PLAYLIST_FOLDER}/MP3/$( fix_names "$file" ).mp3"
+    echo "---- PRENAMING"
+    find "${OUT_FOLDER}/MP3" -maxdepth 1 -type f | while read file; do
+        new_file="${OUT_FOLDER}/MP3/$( fix_names "$file" ).mp3"
         if [ "$file" != "$new_file" ]; then
-			echo "-- FIXING = $file"
-            [ $DEBUG == 1 ] && echo "'$new_file'" || mv -v "$file" "$new_file"
+            echo "-- FIXING = $file"
         else
-			echo "-- FIXING = (DONE_BEFORE) $file"
-		fi
+            echo "-- FIXING = (DONE_BEFORE) $file"
+        fi
     done
-    [ $DEBUG == 1 ] && exit 1
 }
 
 function do_download() {
-    echo "---- DOWNLOADING" 
+    [ ! -z $USERNAME ] && [ ! -z $PASSWORD] && {
+        AUTH="--username $USERNAME --password $PASSWORD"
+        } || {
+        AUTH=""
+    }
+    echo "---- DOWNLOADING"
     $YOUTUBE_BIN \
-    --username $USERNAME \
-    --password $PASSWORD \
-    --output ${PLAYLIST_FOLDER}'/%(title)s-%(id)s.%(ext)s' \
+    $AUTH \
+    --output ${OUT_FOLDER}'/%(title)s-%(id)s.%(ext)s' \
     --playlist-reverse \
     --ffmpeg-location . \
     https://www.youtube.com/playlist?list=${PLAYLIST}
 }
- 
+
 function do_convert() {
-    echo "---- CONVERTING" 
-    mkdir -p ${PLAYLIST_FOLDER}/MP3
-    find "$PLAYLIST_FOLDER" -maxdepth 1 -type f | while read file; do
-        tfile="${PLAYLIST_FOLDER}/MP3/$( fix_names "$file" ).mp3"
+    echo "---- CONVERTING"
+    mkdir -p ${OUT_FOLDER}/MP3
+    find "$OUT_FOLDER" -maxdepth 1 -type f | while read file; do
+        tfile="${OUT_FOLDER}/MP3/$( fix_names "$file" ).mp3"
         size=$( wc -c "$file" | cut -d' ' -f1)
         if [ $size -ge 50 ]; then
             echo "-- FROM = $file"
@@ -101,7 +130,7 @@ function do_convert() {
             echo "-downloaded-" > "$file"
         else
             echo "-- FROM = (DONE_BEFORE) $file"
-		fi
+        fi
     done
 }
 
