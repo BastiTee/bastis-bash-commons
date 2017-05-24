@@ -8,6 +8,7 @@
 # ==============================================================================
 
 YOUTUBE_BIN="youtube-dl"
+$YOUTUBE_BIN -U
 FFMPEG_BIN="ffmpeg"
 [ -v "$( command -v $YOUTUBE_BIN )" ] && {
     echo "No $YOUTUBE_BIN present."
@@ -113,6 +114,7 @@ function do_download() {
     $AUTH \
     --output ${OUT_FOLDER}'/%(title)s-%(id)s.%(ext)s' \
     --playlist-reverse \
+    --ignore-errors \
     --ffmpeg-location . \
     https://www.youtube.com/playlist?list=${PLAYLIST}
 }
