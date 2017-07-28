@@ -388,6 +388,17 @@ directory."; return 1; }
      END {print "== LOC_INSERTED: "ins" LOC_DELETED: "del" LOC_SUM: "tot" FILES: "files }'
 }
 
+function bbc-git-commit () {
+    init-help-output "$FUNCNAME" "Add, commit, pull and push in one command.\
+	[1] Commit message." $@ || return $?
+
+    [ "$( bbc-git-is-repo )" != "1" ] && { echo "You're not inside a git repo \
+directory."; return 1; }
+    [ -z "$1" ] && { echo "Commit message must be set."; return 1; }
+    git add . && git commit -m "$1" && git pull -r && git push
+}
+
+
 # ==============================================================================
 # INTERACTIVITY UTILITIES
 # ==============================================================================
