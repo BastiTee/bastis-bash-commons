@@ -140,7 +140,7 @@ alias apt="apt-get"
 alias aptdate="sudo bash -c \"apt-get update && apt-get upgrade -y && apt-get autoremove --purge -y && apt-get autoclean -y\""
 alias dql="dpkg-query --show --showformat='\${db:Status-Abbrev} \${binary:Package} \${Version}\n'"
 alias gprgp="git pull -r && git push"
-alias gc="bbc-git-commit"
+alias swap-clear="sudo swapoff -a && sudo swapon -a"
 alias _="nautilus . 2> /dev/null &"
 
 # find pattern in code
@@ -155,6 +155,7 @@ if [ ! -v ${SCRIPTDIR} ]; then
 	alias cd="bbc-wd"
 	alias table="bbc-table"
 	alias timeout="bbc-timeout"
+        alias gc="bbc-git-commit"
 	alias fakename="bbc-fakename"
 	alias szip="bbc-zip"
 	alias clear="bbc-clear"
