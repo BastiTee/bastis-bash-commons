@@ -11,7 +11,7 @@ for command in dirname sleep date; do
     [ -z $( command -v $command ) ] && {
         echo "ERROR: '${command}' not available."
         ENVCHECK=0
-        }
+    }
 done
 [ $ENVCHECK == 0 ] && { echo "Environment test failed. Will not source BBC."; return; }
 
@@ -60,11 +60,11 @@ export PROMPT_COMMAND="history -a"
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
 if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
+    if [ -f /usr/share/bash-completion/bash_completion ]; then
+        . /usr/share/bash-completion/bash_completion
+    elif [ -f /etc/bash_completion ]; then
+        . /etc/bash_completion
+    fi
 fi
 
 # COLORED PROMT
@@ -148,24 +148,26 @@ alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --ex
 
 # Find out location of sourced default file ..
 if [ ! -v ${SCRIPTDIR} ]; then
-	# .. and if successful source bash commons functions as well
-	source ${SCRIPTDIR}/bbc
-	echo "Sourcing basti's bash commons functions successful."
-	# Aliases for quickly accessing commons functions
-	alias cd="bbc-wd"
-	alias table="bbc-table"
-	alias timeout="bbc-timeout"
-        alias gc="bbc-git-commit"
-	alias fakename="bbc-fakename"
-	alias szip="bbc-zip"
-	alias clear="bbc-clear"
-    	alias c="bbc-calc"
-    	alias b="bbc-bb"
-	alias gita="clear && bbc-git-all"
-    	alias winex="bbc-winex"
-	alias psg="bbc-ps-ef-grep"
-    	alias rt="bbc-rename-tab"
-    	alias rdp="bbc-rdp"
+    # .. and if successful source bash commons functions as well
+    source ${SCRIPTDIR}/bbc
+    echo "Sourcing basti's bash commons functions successful."
+    # Aliases for quickly accessing commons functions
+    alias cd="bbc-wd"
+    alias table="bbc-table"
+    alias timeout="bbc-timeout"
+    alias gc="bbc-git-commit"
+    alias fakename="bbc-fakename"
+    alias szip="bbc-zip"
+    alias clear="bbc-clear"
+    alias c="bbc-calc"
+    alias gita="clear && bbc-git-all"
+    alias winex="bbc-winex"
+    alias psg="bbc-ps-ef-grep"
+    alias rt="bbc-rename-tab"
+    alias rdp="bbc-rdp"
+    # setup short alias'es for bash bookmark
+    alias b="bbc-bb"
+    for i in $( seq 1 9 ); do alias b$i="b $i"; done
 fi
 
 # FINALIZATION
