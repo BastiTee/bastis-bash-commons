@@ -150,7 +150,7 @@ alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --ex
 if [ ! -v ${SCRIPTDIR} ]; then
     # .. and if successful source bash commons functions as well
     source ${SCRIPTDIR}/bbc
-    echo "Sourcing basti's bash commons functions successful."
+    echo "-- successfully sourced basti's bash commons functions"
     # Aliases for quickly accessing commons functions
     alias cd="bbc-wd"
     alias table="bbc-table"
@@ -172,4 +172,10 @@ fi
 
 # FINALIZATION
 # ===========================================================
-echo "Loading basti's bash defaults successful."
+echo "-- successfully loaded basti's bash defaults"
+# Check for updates
+asfile=~/.apt-check
+[ -f $asfile ] && cat $asfile # print update infos 
+[ -f /usr/lib/update-notifier/apt-check ] && {
+    (/usr/lib/update-notifier/apt-check 2>&1 | sed -r -e "s/(.+);(.+)/-- \1 updates available (\2 security)\n/" > $asfile &)
+}
