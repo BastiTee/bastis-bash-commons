@@ -1,4 +1,14 @@
 ## Basti's Bash Commons
 > Personal collection of pure-bash modules and scripts
 
-Feel free to reuse or fork this.
+Integrate the main script `bbc` by source'ing it like this:
+
+```shell
+source <(curl -s https://bbc.basti.site)
+```
+
+Include any other script in this repository by using an explicit link:
+
+```shell
+source <(curl -s https://raw.githubusercontent.com/BastiTee/bastis-bash-commons/master/bbc-note)
+```
