@@ -141,6 +141,7 @@ alias aptdate="sudo bash -c \"apt-get update && apt-get upgrade -y && apt-get au
 alias dql="dpkg-query --show --showformat='\${db:Status-Abbrev} \${binary:Package} \${Version}\n'"
 alias gprgp="git pull -r && git push"
 alias swap-clear="sudo swapoff -a && sudo swapon -a"
+alias vi="vim"
 alias _="nautilus . 2> /dev/null &"
 
 # find pattern in code
