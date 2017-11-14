@@ -7,29 +7,34 @@
 # ==============================================================================
 
 function show_help () {
-	[ ! -z "$1" ] && echo "$1"
-cat << EOF
+    [ ! -z "$1" ] && echo "$1"
+    cat << EOF
 
 Usage: $( basename $0 ) -h [HOSTNAME] -u [USERNAME]
   [HOSTNAME]      Target host name or IP-address
   [USERNAME]      Username ([user] or [domain]\\[user] is allowed)
 EOF
-	exit 1
+    exit 1
 }
 
 while getopts "h:u:p:" opt; do
     case "$opt" in
-    h) HOST=$OPTARG;;
-	u) USERNAME=$OPTARG;;
-	p) PASSWORD=$OPTARG;;
-	*) show_help "Illegal argument.";;
-	esac
+        h) HOST=$OPTARG ;;
+        u) USERNAME=$OPTARG ;;
+        p) PASSWORD=$OPTARG ;;
+        *) show_help "Illegal argument." ;;
+    esac
 done
 [ -z "$HOST" ] && show_help "Hostname not set."
 [ -z "$USERNAME" ] && show_help "Username not set."
 
-COMMAND="xfreerdp /v:${HOST} /u:${USERNAME} /w:1280 /h:900 +smart-sizing \
-+fonts +aero +clipboard"
+# calculate width and height
+dim=$( xrandr --current | grep "*" | awk '{print $1}' | head -n1 | tr "x" " " )
+dimx=$( echo "$( echo $dim | awk '{print $1}' ) * 0.95" | bc )
+dimy=$( echo "$( echo $dim | awk '{print $2}' ) * 0.90" | bc )
+
+COMMAND="xfreerdp /v:${HOST} /u:${USERNAME} /w:$dimx /h:$dimy +smart-sizing \
+    +fonts +aero +clipboard"
 [ ! -z $PASSWORD ] && { COMMAND="$COMMAND /p:$PASSWORD"; BG=1; }
 echo $COMMAND
 
