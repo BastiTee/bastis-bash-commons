@@ -297,10 +297,7 @@ folder to be packed." $@ || return $?
     fulldir=$( readlink -f "$1" )
     [ ! -d "$fulldir" ] && { echo "Given path is not a directory"; return 1; }
 
-    target_folder="."
-    [ ! -z $BBC_ARCHIVE_FOLDER ] && target_folder=$BBC_ARCHIVE_FOLDER
-    target_folder=$( readlink -f $target_folder )
-
+    target_folder=$( readlink -fm . )
     datetime=$( bbc-get-datetime )
     basename=$( basename $fulldir )
     trgfile=${datetime}_${basename}.zip
