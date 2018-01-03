@@ -333,8 +333,7 @@ function bbc-git-changelog-since-last-tag () {
 	last_commit_hash=$( git rev-parse --short HEAD )
 	last_tag_hash=$( git show-ref --tags --abbrev -d | grep $last_tag |\
 	awk '{ print $1 }' )
-	# >&2 echo "$last_tag >> $last_commit_hash -- $last_tag_hash"
-    git log --pretty=format:%s --reverse $last_commit_hash...$last_tag_hash
+	git log --pretty=format:%s --reverse $last_commit_hash...$last_tag_hash
 }
 
 function bbc-git-repoinit () {
