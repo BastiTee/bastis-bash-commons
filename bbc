@@ -327,6 +327,16 @@ folder to be packed." $@ || return $?
 # GIT UTILITIES
 # ==============================================================================
 
+function bbc-git-changelog-since-last-tag () {
+	last_tag=$( git tag -l --sort=version:refname | tail -n1 )
+	[ -z "$last_tag" ] && { echo "No tag found."; return 0; }
+	last_commit_hash=$( git rev-parse --short HEAD )
+	last_tag_hash=$( git show-ref --tags --abbrev -d | grep $last_tag |\
+	awk '{ print $1 }' )
+	# >&2 echo "$last_tag >> $last_commit_hash -- $last_tag_hash"
+    git log --pretty=format:%s --reverse $last_commit_hash...$last_tag_hash
+}
+
 function bbc-git-repoinit () {
     init-help-output "$FUNCNAME" "Quick fix to setup a newly cloned github \
 repository with the desired username and email and apply some fixes.[1] \
