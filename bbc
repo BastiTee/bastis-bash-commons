@@ -141,7 +141,7 @@ $@ || return $?
 	done
 }
 
-function bbc-zip-subfolders() {
+function bbc-zip-subfolders () {
     init-help-output "$FUNCNAME" "Zips the content of all immediate sub-\
 directories to ZIP-files with the same name." $@ || return $?
 
@@ -535,7 +535,7 @@ with of 70.[1] Input text.[2] Optional line width." \
 	echo -e "$1" | fold -s -w $columns
 }
 
-function bbc-remove-duplicate-empty_lines () {
+function bbc-remove-duplicate-empty-lines () {
 	init-help-output "$FUNCNAME" "Removes duplicate empty lines read from \
 standard-in." $@ || return $?
 
