@@ -4,7 +4,7 @@
 Integrate the main script `bbc` by source'ing it like this:
 
 ```shell
-source <(curl -s https://bbc.basti.site)
+source <(curl -Ls http://bbc.basti.site)
 ```
 
 Include any other script in this repository by using an explicit link:

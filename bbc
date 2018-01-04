@@ -1,7 +1,8 @@
 #!/bin/bash
 # ==============================================================================
 # BASTI'S BASH COMMONS
-# Commonly used bash methods.
+# Commonly used bash methods. Include in script with:
+# source <(curl -Ls http://bbc.basti.site)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
@@ -328,6 +329,9 @@ folder to be packed." $@ || return $?
 # ==============================================================================
 
 function bbc-git-changelog-since-last-tag () {
+	init-help-output "$FUNCNAME" "Returns a flat changelog for all changes \
+since the latest tag." $@ || return $?
+
 	last_tag=$( git tag -l --sort=version:refname | tail -n1 )
 	[ -z "$last_tag" ] && { echo "No tag found."; return 0; }
 	last_commit_hash=$( git rev-parse --short HEAD )
