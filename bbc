@@ -40,6 +40,45 @@ runs it. This comes in handy if you are unsure whether a tool exists.\
 # PRODUCTIVITY UTILITIES
 # ==============================================================================
 
+function bbc-search-replace () {
+   	init-help-output "$FUNCNAME" "Search for pattern and replace with given replace string on the given files.[1] Search pattern.[2] Replace string.[3] List of files." \
+$@ || return $?
+
+	[ -z "$1" ] && { echo "Search pattern not provided."; return 1; }
+	search="$1"
+	[ -z "$2" ] && { echo "Replace string not provided."; return 1; }
+	replace="$2"
+	shift; shift
+	[ -z "$3" ] && { echo "List of files not provided."; return 1; }
+	files=$@
+	# echo $files | tr " " "\n" | sort
+
+	total=0
+	for file in $( echo $files | tr " " "\n" )
+	do
+		[ -z "$( grep "$search" $file )" ] && continue
+		[ ! -z $( command -v tput) ] && {
+			echo "$( tput setaf 3 )> $file $( tput sgr0 )"
+		} || {
+			echo "> $file"
+		}
+		grep "$search" $file
+		hits=$( grep -c "$search" $file )
+		total=$( expr $total + $hits )
+	done
+	[ $total == 0 ] && {
+		echo "––– $total total hits."
+		return 0
+	}
+	read -p "––– $total total hits. continue? (y/n)" -n 1 -r
+	[[ ! $REPLY =~ ^[Yy]$ ]] && { echo ""; return 1; }
+	echo ""
+
+	echo $files | while read srcfile; do sed -i \
+	-e "s/$search/$replace/g" $srcfile; done
+
+}
+
 function bbc-ps-ef-grep () {
    	init-help-output "$FUNCNAME" "A convenience function to simply use the ps \
 command along with grep and some formatting.[1] Grep pattern." \
