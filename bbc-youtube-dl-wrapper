@@ -8,6 +8,7 @@
 # ==============================================================================
 
 YOUTUBE_BIN="youtube-dl"
+DO_RENAME=0
 $YOUTUBE_BIN -U
 FFMPEG_BIN="ffmpeg"
 [ -v "$( command -v $YOUTUBE_BIN )" ] && {
@@ -23,19 +24,22 @@ function show_help () {
     [ ! -z "$1" ] && echo "$1"
 cat << EOF
 
-Usage: $( basename $0 ) -p <PLAYLIST> (-a) (-o <FOLDER>)
+Usage: $( basename $0 ) -p <PLAYLIST> (-o <FOLDER>) (-a) (-r)
   -p <PLAYLIST>  Playlist ID
-  -a             Ask for YouTube authentication (for private playlists)
   -o <FOLDER>    Alternative download folder
+  -a             Ask for YouTube authentication (for private playlists)
+  -r             Performe MP3 renaming
 EOF
     exit 1
 }
 
-while getopts "h:p:ao:" opt; do
+while getopts "hp:ao:r" opt; do
     case "$opt" in
         p) PLAYLIST=$OPTARG;;
         a) ASK_AUTH=1;;
+        r) DO_RENAME=1;;
         o) DL_FOLDER=$OPTARG;;
+        h) show_help "";;
         *) show_help "Illegal argument.";;
     esac
 done
@@ -123,7 +127,14 @@ function do_convert() {
     echo "---- CONVERTING"
     mkdir -p ${OUT_FOLDER}/MP3
     find "$OUT_FOLDER" -maxdepth 1 -type f | while read file; do
-        tfile="${OUT_FOLDER}/MP3/$( fix_names "$file" ).mp3"
+        if [ $DO_RENAME -eq 0 ]
+        then
+            fn=$( basename "$file" | sed -r -e "s/ /_/g" -e "s/\.[^\.]+$//" )
+            tfile="${OUT_FOLDER}/MP3/$fn.mp3"
+            echo $tfile
+        else
+            tfile="${OUT_FOLDER}/MP3/$( fix_names "$file" ).mp3"
+        fi
         size=$( wc -c "$file" | cut -d' ' -f1)
         if [ $size -ge 50 ]; then
             echo "-- FROM = $file"
@@ -136,6 +147,6 @@ function do_convert() {
     done
 }
 
-do_prename
+[ $DO_RENAME -eq 1 ] && do_prename
 do_download
 do_convert
