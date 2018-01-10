@@ -367,6 +367,19 @@ folder to be packed." $@ || return $?
 # GIT UTILITIES
 # ==============================================================================
 
+function bbc-clone-gist () {
+	init-help-output "$FUNCNAME" "Clone a single gist by its ID.\
+	[1] Gist ID." $@ || return $?
+
+	tmp=$( mktemp )
+	curl -s https://api.github.com/gists/$1 > $tmp
+	trg=$( cat $tmp | grep description | sed -r -e "s/^[^:]+:[ ]*\"//" \
+	-e "s/\",[ ]*$//" -e "s/[^a-zA-Z0-9]/_/g" | tr '[:upper:]' '[:lower:]' |\
+	sed -r -e "s/^_*//" -e "s/_*$//" -e "s/_+/_/g" )
+	git clone git@gist.github.com:${1}.git $trg
+	rm $tmp
+}
+
 function bbc-git-changelog-since-last-tag () {
 	init-help-output "$FUNCNAME" "Returns a flat changelog for all changes \
 since the latest tag." $@ || return $?

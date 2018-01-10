@@ -120,7 +120,7 @@ function do_download() {
     --playlist-reverse \
     --ignore-errors \
     --ffmpeg-location . \
-    https://www.youtube.com/playlist?list=${PLAYLIST}
+    "https://www.youtube.com/playlist?list=${PLAYLIST}"
 }
 
 function do_convert() {
@@ -139,7 +139,8 @@ function do_convert() {
         if [ $size -ge 50 ]; then
             echo "-- FROM = $file"
             echo "-- TO   = $tfile"
-            $FFMPEG_BIN -i "$file" -ac 2 -ab 256k "$tfile" </dev/null
+            $FFMPEG_BIN -i "$file" -filter:a dynaudnorm -ar 44100 \
+            -ac 2 -ab 128k "$tfile" </dev/null
             echo "-downloaded-" > "$file"
         else
             echo "-- FROM = (DONE_BEFORE) $file"
