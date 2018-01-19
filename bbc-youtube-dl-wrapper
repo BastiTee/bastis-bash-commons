@@ -38,7 +38,7 @@ while getopts "hp:ao:r" opt; do
         p) PLAYLIST=$OPTARG;;
         a) ASK_AUTH=1;;
         r) DO_RENAME=1;;
-        o) DL_FOLDER=$OPTARG;;
+        o) DL_FOLDER=$( readlink -f $OPTARG );;
         h) show_help "";;
         *) show_help "Illegal argument.";;
     esac
@@ -48,6 +48,7 @@ done
 OUT_FOLDER=$PLAYLIST
 [ ! -z $DL_FOLDER ] && OUT_FOLDER=$DL_FOLDER
 mkdir -p $OUT_FOLDER
+echo "- using output folder $OUT_FOLDER"
 
 [ "$ASK_AUTH" == 1 ] && {
     read -p "Enter youtube username: " USERNAME
@@ -127,6 +128,10 @@ function do_convert() {
     echo "---- CONVERTING"
     mkdir -p ${OUT_FOLDER}/MP3
     find "$OUT_FOLDER" -maxdepth 1 -type f | while read file; do
+        [[ "$file" =~ .*\.sh ]] && {
+            echo "-- SKIPPED $file"
+            continue
+        }
         if [ $DO_RENAME -eq 0 ]
         then
             fn=$( basename "$file" | sed -r -e "s/ /_/g" -e "s/\.[^\.]+$//" )
