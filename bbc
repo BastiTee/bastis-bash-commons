@@ -79,6 +79,19 @@ $@ || return $?
 
 }
 
+
+function bbc-fssafe-filename () {
+   	init-help-output "$FUNCNAME" "A convenience function to calculate a filesystem-safe name for the given input string.[1] Source string." \
+$@ || return $?
+
+	[ -z "$1" ] && { echo "No source string provided."; return; }
+    tr "[:upper:]" "[:lower:]" <<< "$1" | sed -r \
+	-e "s/^[ ]*//" -e "s/[ ]*$//" -e "s/^https?:\/\///" -e "s/ä/ae/g" \
+	-e "s/ö/oe/g" -e "s/ü/ue/g" -e "s/ß/ss/g" \
+	-e "s/[^a-zA-Z0-9_-]/_/g" -e "s/[_]+/_/g" -e "s/^_//" -e "s/_$//"
+}
+
+
 function bbc-ps-ef-grep () {
    	init-help-output "$FUNCNAME" "A convenience function to simply use the ps \
 command along with grep and some formatting.[1] Grep pattern." \
