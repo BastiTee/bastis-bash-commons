@@ -143,6 +143,7 @@ alias gprgp="git pull -r && git push"
 alias swap-clear="sudo swapoff -a && sudo swapon -a"
 alias vi="vim"
 alias _="nautilus . 2> /dev/null &"
+alias wl="wunderline"
 
 # find pattern in code
 alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --exclude-dir=bin"
@@ -176,7 +177,7 @@ fi
 echo "-- successfully loaded basti's bash defaults"
 # Check for updates
 asfile=~/.apt-check
-[ -f $asfile ] && cat $asfile # print update infos 
+[ -f $asfile ] && cat $asfile # print update infos
 [ -f /usr/lib/update-notifier/apt-check ] && {
     (/usr/lib/update-notifier/apt-check 2>&1 | sed -r -e "s/(.+);(.+)/-- \1 updates available (\2 security)\n/" > $asfile &)
 }
