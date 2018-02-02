@@ -6,27 +6,30 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
+# If not running interactively, don't do anything
+if [[ "$-" != *i* ]]; then return; fi
+
 ENVCHECK=1
 for command in dirname sleep date; do
-    [ -z $( command -v $command ) ] && {
+    if [ -z $( command -v $command ) ]; then
         echo "ERROR: '${command}' not available."
         ENVCHECK=0
-    }
+    fi
 done
-[ $ENVCHECK == 0 ] && { echo "Environment test failed. Will not source BBC."; return; }
+if [ $ENVCHECK == 0 ]; then
+    echo "Environment test failed. Will not source BBC."
+    return
+fi
 
 # Find path to script
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Make sure this only gets sourced once
-[[ -z ${USER_BASHRC} ]] && USER_BASHRC="1" || return
+if [[ -z ${USER_BASHRC} ]]; then USER_BASHRC="1"; else return; fi
 
 # = BASIC BASH SETTINGS ========================================================
 
 # Extend path with bash commons
 PATH=${PATH}:${SCRIPTDIR}
-
-# If not running interactively, don't do anything
-[[ "$-" != *i* ]] && return
 
 # Don't use ^D to exit
 set -o ignoreeof
@@ -55,6 +58,9 @@ export HISTIGNORE=$"[ \t]*:&:[fb]g:exit:ls" # Ignore the ls command as well
 
 # Whenever displaying the prompt, write the previous line to disk
 export PROMPT_COMMAND="history -a"
+
+# See https://unix.stackexchange.com/a/72092
+stty -ixon
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
@@ -152,7 +158,6 @@ alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --ex
 if [ ! -v ${SCRIPTDIR} ]; then
     # .. and if successful source bash commons functions as well
     source ${SCRIPTDIR}/bbc
-    echo "-- successfully sourced basti's bash commons functions"
     # Aliases for quickly accessing commons functions
     alias cd="bbc-wd"
     alias table="bbc-table"
@@ -174,10 +179,4 @@ fi
 
 # FINALIZATION
 # ===========================================================
-echo "-- successfully loaded basti's bash defaults"
-# Check for updates
-asfile=~/.apt-check
-[ -f $asfile ] && cat $asfile # print update infos
-[ -f /usr/lib/update-notifier/apt-check ] && {
-    (/usr/lib/update-notifier/apt-check 2>&1 | sed -r -e "s/(.+);(.+)/-- \1 updates available (\2 security)\n/" > $asfile &)
-}
+echo ">> [bbc] loaded."
