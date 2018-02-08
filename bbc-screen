@@ -1,0 +1,53 @@
+#!/bin/bash
+# ==============================================================================
+# SCREEN (BASTI's BASH COMMONS)
+# An adapter for screen to setup some templates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+echo "-- screen called with args: '$@'"
+
+function start_screen_with_config() {
+    tempf=$( mktemp )
+    # -------------
+    {
+        # include default platform screen settings
+        cat ~/.screenrc 2>/dev/null
+        # add on-the-fly settings
+        cat $1
+        # add command to delete temp file
+        cat << EOF
+stuff "rm -f $tempf ^M"
+stuff "clear ^M"
+EOF
+    } > $tempf
+    # -------------
+    # cat $tempf; sleep 4
+    screen -S $2 -c $tempf
+    killall -v screen
+}
+
+if [ "$1" == "dev" ]; then
+    # DEFAULT DEVELOPMENT SETUP ----------------------------------------------
+    shift
+    tempf=$( mktemp )
+    cat << EOF > $tempf
+split -v
+screen -t ED bash
+screen -t ED bash
+screen -t ED bash
+focus
+screen -t FILES mc
+split
+resize -v 70%
+focus
+screen -t PROC htop
+focus
+select 0
+EOF
+    start_screen_with_config $tempf "dev-console"
+else
+    # FALLBACK: START MINT SCREEN ---------------------------------------------
+    screen $@
+fi
