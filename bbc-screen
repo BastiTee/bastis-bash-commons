@@ -34,15 +34,17 @@ if [ "$1" == "dev" ]; then
     tempf=$( mktemp )
     cat << EOF > $tempf
 split -v
-screen -t ED bash
-screen -t ED bash
-screen -t ED bash
+screen -t ED
+screen -t ED
+screen -t ED
 focus
-screen -t FILES mc
+screen -t FILES
+stuff "mc ^M"
 split
 resize -v 70%
 focus
-screen -t PROC htop
+screen -t PROC
+stuff "htop ^M"
 focus
 select 0
 EOF
