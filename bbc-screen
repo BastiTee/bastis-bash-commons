@@ -25,7 +25,7 @@ EOF
     # -------------
     # cat $tempf; sleep 4
     screen -S $2 -c $tempf
-    killall -v screen
+#    killall -v screen
 }
 
 if [ "$1" == "dev" ]; then
