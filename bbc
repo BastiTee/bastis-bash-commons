@@ -386,7 +386,8 @@ function bbc-git-clone-gist () {
 
 	tmp=$( mktemp )
 	curl -s https://api.github.com/gists/$1 > $tmp
-	trg=$( cat $tmp | grep description | sed -r -e "s/^[^:]+:[ ]*\"//" \
+	trg=$( cat $tmp | grep "\"description\"" | head -n1 |\
+	sed -r -e "s/^[^:]+:[ ]*\"//" \
 	-e "s/\",[ ]*$//" -e "s/[^a-zA-Z0-9]/_/g" | tr '[:upper:]' '[:lower:]' |\
 	sed -r -e "s/^_*//" -e "s/_*$//" -e "s/_+/_/g" )
 	git clone git@gist.github.com:${1}.git $trg
