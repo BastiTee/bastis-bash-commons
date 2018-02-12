@@ -40,6 +40,16 @@ runs it. This comes in handy if you are unsure whether a tool exists.\
 # PRODUCTIVITY UTILITIES
 # ==============================================================================
 
+function bbc-vim-open () {
+   	init-help-output "$FUNCNAME" "Find files for pattern and open newest five in vim-tabs.[1] Search pattern." \
+$@ || return $?
+    [ -z "$1" ] && { echo "No pattern provided."; return 0; }
+    files=$( find -maxdepth 3 -type f -iname "*$1*" -printf '%T@ %p\n' |\
+            sort -rn | head -n5 | awk '{print $2}' | tr "\n" " " )
+    echo $files 
+    vi -p $files
+}
+
 function bbc-search-replace () {
    	init-help-output "$FUNCNAME" "Search for pattern and replace with given replace string on the given files.[1] Search pattern.[2] Replace string.[3] List of files." \
 $@ || return $?

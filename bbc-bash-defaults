@@ -173,6 +173,7 @@ if [ ! -v ${SCRIPTDIR} ]; then
     alias rt="bbc-rename-tab"
     alias rdp="bbc-rdp"
     alias screen="bbc-screen"
+    alias vo="bbc-vim-open"
     # setup short alias'es for bash bookmark
     alias b="bbc-bb"
     for i in $( seq 1 9 ); do alias b$i="b $i"; done
