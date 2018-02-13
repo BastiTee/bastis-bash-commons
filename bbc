@@ -2,7 +2,7 @@
 # ==============================================================================
 # BASTI'S BASH COMMONS
 # Commonly used bash methods. Include in script with:
-# source <(curl -Ls http://bbc.basti.site)
+# source <(curl -Ls https://bbc.bastis.cloud)
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
