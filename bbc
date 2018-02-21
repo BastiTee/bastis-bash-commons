@@ -46,7 +46,7 @@ $@ || return $?
     [ -z "$1" ] && { echo "No pattern provided."; return 0; }
     files=$( find -maxdepth 3 -type f -iname "*$1*" -printf '%T@ %p\n' |\
             sort -rn | head -n5 | awk '{print $2}' | tr "\n" " " )
-    echo $files 
+    echo $files
     vi -p $files
 }
 
@@ -436,10 +436,6 @@ Your github username.[2] Your github e-mail address." $@ || return $?
 		echo "Maybe you need to fix: http://stackoverflow.com/questions/\
 2643502/git-permission-denied-publickey"
 	fi
-	echo "Running 'git pull -r' now. If you experience login problems, you \
-might also need to add your public rsa key to github."
-    git pull -r
-
 }
 
 function bbc-git-is-repo () {
