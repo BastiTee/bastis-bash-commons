@@ -1,0 +1,22 @@
+{
+  "name": "bastis-bash-commons",
+  "version": "1.0.0",
+  "description": "> Personal collection of pure-bash modules and scripts",
+  "main": "bbc-browsersync-here.js",
+  "dependencies": {
+    "browser-sync": "^2.23.6",
+    "express": "^4.16.2"
+  },
+  "devDependencies": {},
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BastiTee/bastis-bash-commons.git"
+  },
+  "author": "",
+  "license": "APL",
+  "bugs": {
+    "url": "https://github.com/BastiTee/bastis-bash-commons/issues"
+  },
+  "homepage": "https://github.com/BastiTee/bastis-bash-commons#readme"
+}
