@@ -1,0 +1,63 @@
+#!/bin/bash
+# ==============================================================================
+# NOTEBOOK (BASTI's BASH COMMONS)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# ==============================================================================
+
+function touch_daily() {
+    daily_file="${BBC_NOTEBOOK}/$( date "+%Y-%m-%d" )-daily.md"
+    >&2 echo "-- tdf = $daily_file"
+    if [ ! -f $daily_file ]; then
+        >&2 echo "-- creating daily file"
+        cat << EOF > $daily_file
+---
+layout: post
+keywords: daily
+title: "Daily – $( date "+%d.%m.%Y" )"
+---
+
+EOF
+    fi
+    # remove multiple trailing newlines
+    sed -i -e :a -e '/^\n*$/{$d;N;};/\n$/ba' $daily_file
+    # add one newline
+    echo "" >> $daily_file
+}
+
+if [ -z "$BBC_NOTEBOOK" ]; then
+    echo "Set '\$BBC_NOTEBOOK' to the desired notebook path."
+    exit 1
+fi
+
+if [ -z "$1" ] || [ "$1" == "daily" ]; then
+    cmd="daily"
+elif [ "$1" == "store" ]; then
+    cmd="store"
+fi
+shift
+>&2 echo "-- cmd = $cmd"
+
+touch_daily
+
+# open daily with cursor at the end and in insert-mode
+if [ "$cmd" == "daily" ]; then
+    vim "+normal G$" +startinsert $daily_file
+    exit 0
+fi
+
+>&2 echo "-- rem = $@"
+# Pipe output of last command to daily file and open it
+if [ "$cmd" == "store" ]; then
+    timestamp=$( date +"%Y-%m-%d %T" )
+    [ -z "$1" ] && note_title=$timestamp || note_title="$@ ($timestamp)"
+    echo -e "**Shell output: $note_title**\n" >> $daily_file
+    echo -e "\`\`\`shell" >> $daily_file
+    echo -e "$( whoami )@$( hostname ):$( pwd )\$" >> $daily_file
+    # print the input stream
+    while read data; do
+        echo -e "$data" >> $daily_file
+        echo -e "$data"
+    done
+    echo -e "\`\`\`" >> $daily_file
+fi
