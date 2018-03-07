@@ -21,7 +21,7 @@ if [ $ENVCHECK == 0 ]; then
     return
 fi
 
-# Find path to script
+# Find path to this script's dir
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Make sure this only gets sourced once
 if [[ -z ${USER_BASHRC} ]]; then USER_BASHRC="1"; else return; fi
@@ -98,7 +98,8 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]\
+:\[\033[01;34m\]\w\[\033[00m\]\$ '
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -130,8 +131,6 @@ fi
 # ALIAS SETTINGS
 # ===========================================================
 
-alias http="python3 -m http.server 1337"
-alias duh="sudo du -sh * 2> /dev/null | sort -rh"
 alias less="less -r" # raw control characters
 alias whence="type -a" # where, of a sort
 alias grep="grep --color" # colored grep
@@ -143,16 +142,19 @@ alias l="ll"
 alias ..="cd .."
 alias ...="cd ../../"
 alias apt="apt-get"
-alias aptdate="sudo bash -c \"apt-get update && apt-get upgrade -y && apt-get autoremove --purge -y && apt-get autoclean -y\""
-alias dql="dpkg-query --show --showformat='\${db:Status-Abbrev} \${binary:Package} \${Version}\n'"
+alias aptdate="sudo bash -c \"apt-get update && apt-get upgrade -y \
+&& apt-get autoremove --purge -y && apt-get autoclean -y\""
+alias dql="dpkg-query --show --showformat='\${db:Status-Abbrev} \
+\${binary:Package} \${Version}\n'"
 alias gprgp="git pull -r && git push"
 alias swap-clear="sudo swapoff -a && sudo swapon -a"
 alias vi="vim"
 alias _="nautilus . 2> /dev/null &"
 alias wl="wunderline"
-
-# find pattern in code
-alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class --exclude=*.jar --exclude-dir=bin"
+alias http="python3 -m http.server 1337"
+alias duh="sudo du -sh * 2> /dev/null | sort -rh"
+alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class \
+--exclude=*.jar --exclude-dir=bin"
 
 # Find out location of sourced default file ..
 if [ ! -v ${SCRIPTDIR} ]; then
