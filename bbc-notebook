@@ -7,16 +7,14 @@
 
 function touch_daily() {
     daily_file="${BBC_NOTEBOOK}/$( date "+%Y-%m-%d" )-daily.md"
-    >&2 echo "-- tdf = $daily_file"
+    # >&2 echo "-- tdf = $daily_file"
     if [ ! -f $daily_file ]; then
-        >&2 echo "-- creating daily file"
         cat << EOF > $daily_file
 ---
 layout: post
 keywords: daily
 title: "Daily – $( date "+%d.%m.%Y" )"
 ---
-
 EOF
     fi
     # remove multiple trailing newlines
@@ -25,30 +23,82 @@ EOF
     echo "" >> $daily_file
 }
 
+# ==============================================================================
+
+function touch_new() {
+    page_title=$( sed -r -e "s/ +/_/g" <<< "$@" | tr "[:upper:]" "[:lower:]" )
+    new_file="${BBC_NOTEBOOK}/$( date "+%Y-%m-%d" )-$page_title.md"
+    # >&2 echo "-- tnf = $new_file"
+    if [ ! -f $new_file ]; then
+        cat << EOF > $new_file
+---
+layout: post
+keywords:
+title: "$1"
+---
+EOF
+    fi
+    # remove multiple trailing newlines
+    sed -i -e :a -e '/^\n*$/{$d;N;};/\n$/ba' $new_file
+    # add one newline
+    echo "" >> $new_file
+    echo "$new_file"
+}
+
+# ==============================================================================
+
 if [ -z "$BBC_NOTEBOOK" ]; then
     echo "Set '\$BBC_NOTEBOOK' to the desired notebook path."
     exit 1
 fi
+>&2 echo -e "-- cmd = $1\n"
 
-if [ -z "$1" ] || [ "$1" == "daily" ]; then
-    cmd="daily"
-elif [ "$1" == "store" ]; then
-    cmd="store"
+# ==============================================================================
+# OPEN A NOTEBOOK PAGE
+# ==============================================================================
+if [ "$1" == "open" ] || [ "$1" == "o" ]; then
+    shift
+    bbc-cmd-hub -c "find $BBC_NOTEBOOK -type f -iname '*.md' | sort -r" \
+        -s -p vim $@
+    exit 0
 fi
-shift
->&2 echo "-- cmd = $cmd"
 
-touch_daily
+# ==============================================================================
+# REMOVE A NOTEBOOK PAGE
+# ==============================================================================
+if [ "$1" == "rem" ] || [ "$1" == "r" ]; then
+    bbc-cmd-hub -c "find $BBC_NOTEBOOK -type f -iname '*.md' | sort -r" \
+        -s -p "rm -f"
+    exit 0
+fi
 
-# open daily with cursor at the end and in insert-mode
-if [ "$cmd" == "daily" ]; then
+# ==============================================================================
+# CREATE AND OPEN DAILY NOTEBOOK PAGE
+# ==============================================================================
+if [ -z "$1" ] || [ "$1" == "daily" ] || [ "$1" == "d" ]; then
+    touch_daily
     vim "+normal G$" +startinsert $daily_file
     exit 0
 fi
 
->&2 echo "-- rem = $@"
-# Pipe output of last command to daily file and open it
-if [ "$cmd" == "store" ]; then
+# ==============================================================================
+# CREATE AND OPEN A NAMED NOTEBOOK PAGE
+# ==============================================================================
+if [ "$1" == "new" ] || [ "$1" == "n" ]; then
+    shift
+    if [ $# -le 0 ]; then echo "No page name provided."; exit 1; fi
+    nf=$( touch_new "$@" )
+    vim "+normal G$" +startinsert $nf
+    exit 0
+fi
+
+# ==============================================================================
+# PIPE OUTPUT OF PREVIOUS COMMAND TO DAILY NOTEBOOK PAGE
+# ==============================================================================
+if [ "$1" == "store" ] || [ "$1" == "s" ]; then
+    shift
+    touch_daily
+    >&2 echo "-- rem = $@"
     timestamp=$( date +"%Y-%m-%d %T" )
     [ -z "$1" ] && note_title=$timestamp || note_title="$@ ($timestamp)"
     echo -e "**Shell output: $note_title**\n" >> $daily_file
@@ -60,4 +110,27 @@ if [ "$cmd" == "store" ]; then
         echo -e "$data"
     done
     echo -e "\`\`\`" >> $daily_file
+    exit 0
 fi
+
+# ==============================================================================
+# GO TO NOTEBOOK DIRECTORY
+# ==============================================================================
+if [ "$1" == "print" ] || [ "$1" == "p" ]; then
+    echo $BBC_NOTEBOOK
+    exit 0
+fi
+
+# ==============================================================================
+cat << EOF
+Unknown command. Supported:
+
+  - open  | o       Open a notebook page via file selector.
+  - rem   | r       Remove a notebook page via file selector.
+  - new   | n       Create a new named notebook page.
+  - daily | d       Create if necessary and open daily notebook page (default).
+  - store | s       Pipe output of previous command to daily notebook page.
+  - print | p       Print current notebook directory.
+
+EOF
+exit 1
