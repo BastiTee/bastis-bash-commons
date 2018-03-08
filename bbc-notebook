@@ -66,7 +66,7 @@ fi
 # ==============================================================================
 # REMOVE A NOTEBOOK PAGE
 # ==============================================================================
-if [ "$1" == "rem" ] || [ "$1" == "r" ]; then
+if [ "$1" == "rm" ] || [ "$1" == "r" ]; then
     bbc-cmd-hub -c "find $BBC_NOTEBOOK -type f -iname '*.md' | sort -r" \
         -s -p "rm -f"
     exit 0
@@ -126,7 +126,7 @@ cat << EOF
 Unknown command. Supported:
 
   - open  | o       Open a notebook page via file selector.
-  - rem   | r       Remove a notebook page via file selector.
+  - rm    | r       Remove a notebook page via file selector.
   - new   | n       Create a new named notebook page.
   - daily | d       Create if necessary and open daily notebook page (default).
   - store | s       Pipe output of previous command to daily notebook page.
