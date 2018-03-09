@@ -70,7 +70,7 @@ def run_git(git_dir, arglist):
     output = re.sub('\n$', '', output)
     global LOCK
     with LOCK:
-        if ('up-to-date' in output.lower()
+        if (('up-to-date' in output.lower() or 'up to date' in output.lower())
                 and not 'untracked files' in output.lower()
                 and not 'changes not staged' in output.lower()):
             print(
