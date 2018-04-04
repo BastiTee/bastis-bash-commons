@@ -23,7 +23,7 @@ function bbc-get-bash-version () {
 	init-help-output "$FUNCNAME" "Returns the bash version as separated string \
 to check for compatibility." $@ || return $?
 
-	bash --version | head -n1 | sed -r -e "s/^[^0-9]+([0-9\\.]+).*/\1/g" |\
+	bash --version | head -n1 | sed -E -e "s/^[^0-9]+([0-9\\.]+).*/\1/g" |\
 	tr "." " "
 }
 
@@ -95,7 +95,7 @@ function bbc-fssafe-filename () {
 $@ || return $?
 
 	[ -z "$1" ] && { echo "No source string provided."; return; }
-    tr "[:upper:]" "[:lower:]" <<< "$1" | sed -r \
+    tr "[:upper:]" "[:lower:]" <<< "$1" | sed -E \
 	-e "s/^[ ]*//" -e "s/[ ]*$//" -e "s/^https?:\/\///" -e "s/ä/ae/g" \
 	-e "s/ö/oe/g" -e "s/ü/ue/g" -e "s/ß/ss/g" \
 	-e "s/[^a-zA-Z0-9_-]/_/g" -e "s/[_]+/_/g" -e "s/^_//" -e "s/_$//"
@@ -243,7 +243,7 @@ pattern." $@ || return $?
 	# pattern-based search and changing of dirs
 	no_hits=0
 	first_hit=
-	pattern=$( echo "*${1}*" | sed -r -e "s/[\/]+/\//g" -e "s/\//*\/*/g" )
+	pattern=$( echo "*${1}*" | sed -E -e "s/[\/]+/\//g" -e "s/\//*\/*/g" )
 	# core command: all dirs, no hidden dirs
 	command="find -maxdepth $MAX_DEPTH -type d \( -iwholename \"$pattern\" ! \
 	-iwholename \"*\/.*\" \) -prune 2> /dev/null"
@@ -397,9 +397,9 @@ function bbc-git-clone-gist () {
 	tmp=$( mktemp )
 	curl -s https://api.github.com/gists/$1 > $tmp
 	trg=$( cat $tmp | grep "\"description\"" | head -n1 |\
-	sed -r -e "s/^[^:]+:[ ]*\"//" \
+	sed -E -e "s/^[^:]+:[ ]*\"//" \
 	-e "s/\",[ ]*$//" -e "s/[^a-zA-Z0-9]/_/g" | tr '[:upper:]' '[:lower:]' |\
-	sed -r -e "s/^_*//" -e "s/_*$//" -e "s/_+/_/g" )
+	sed -E -e "s/^_*//" -e "s/_*$//" -e "s/_+/_/g" )
 	git clone git@gist.github.com:${1}.git $trg
 	rm $tmp
 }
@@ -673,7 +673,7 @@ function init-help-output () {
 		function_help=$( echo -e "$function_help" | \
 		sed -e "s/\[1\]/\n[1]/g" )
 		function_help=$( echo -e "$function_help" | \
-		sed -r -e "s/(\[[0-9]\])/\n${fga}\1${rs}/g" )
+		sed -E -e "s/(\[[0-9]\])/\n${fga}\1${rs}/g" )
 		# construct help output
 		help_string="\nUsage: ${fg}${function_name}${rs}"
 		arg_string=
