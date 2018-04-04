@@ -32,7 +32,7 @@ function bbc-exe () {
 runs it. This comes in handy if you are unsure whether a tool exists.\
 [1] Command to be executed." $@ || return $?
 
-	[ ! -v $( command -v $1 ) ] && { eval $@; return 0; } || return 1
+	[ ! -z $( command -v $1 ) ] && { eval $@; return 0; } || return 1
 
 }
 
@@ -135,7 +135,7 @@ $@ || return $?
     [ $# -le 0 ] && { echo "You must set at least one date."; return 1; }
 
     ep1=$( date --date "$1" +%s )
-    [ -v $2 ] && ep2=$( date +%s ) || ep2=$( date --date "$2" +%s )
+    [ -z "$2" ] && ep2=$( date +%s ) || ep2=$( date --date "$2" +%s )
     diffEp=$(( $ep2 - $ep1 ))
     bbc-calc "$diffEp / 60 / 60 / 24"
 
@@ -229,7 +229,7 @@ pattern." $@ || return $?
 	# important: use builtin cd in scenarios where cd is aliased to bbc-wd !!
 
 	# on 'wd' without any options, don't do anything (in contrast to 'cd' )
-	if [ $# -le 0 ] || [ -v "$1" ]; then return; fi
+	if [ $# -le 0 ] || [ -z "$1" ]; then return; fi
 	# keep 'cd -' function, but without output
 	if [ "$1" == "-" ]; then builtin cd - &> /dev/null; return; fi
 	# keep 'cd ..' function
@@ -429,7 +429,7 @@ Your github username.[2] Your github e-mail address." $@ || return $?
 	# Fix https origin
 	https_link=$( cat .git/config | grep -A3 "\[remote \"origin\"\]" |\
 	grep https: | awk '{print $3}')
-	if [ ! -v $https_link ]
+	if [ ! -z "$https_link" ]
 	then
 		echo "Fixing https origin $https_link"
 		sed -i -e "s/https\:\/\/github\.com\//git@github.com:/g" .git/config
@@ -602,8 +602,8 @@ with of 70.[1] Input text.[2] Optional line width." \
 	$@ || return $?
 
 	columns=$2
-	if [ -v $columns ]; then columns=$( bbc-exe "tput cols" ); fi
-	if [ -v $columns ]; then columns=70; fi
+	if [ -z $columns ]; then columns=$( bbc-exe "tput cols" ); fi
+	if [ -z $columns ]; then columns=70; fi
 	echo -e "$1" | fold -s -w $columns
 }
 
@@ -659,7 +659,7 @@ function init-help-output () {
 	fg=
 	rs=
 	fga=
-	if [ ! -v $( command -v tput ) ]; then
+	if [ ! -z $( command -v tput ) ]; then
 		fg=$( tput setaf 6 )
 		fga=$( tput setaf 3 )
 		rs=$( tput sgr0 )

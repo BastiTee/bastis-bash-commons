@@ -157,7 +157,7 @@ alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class \
 --exclude=*.jar --exclude-dir=bin"
 
 # Find out location of sourced default file ..
-if [ ! -v ${SCRIPTDIR} ]; then
+if [ ! -z ${SCRIPTDIR} ]; then
     # .. and if successful source bash commons functions as well
     source ${SCRIPTDIR}/bbc
     # Aliases for quickly accessing commons functions
