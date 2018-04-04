@@ -92,7 +92,7 @@ NR!=FNR{
 [ ! -z "$HFILE" ] && { cat $HFILE; echo ""; } # header if available
 
 i=1
-mapfile -t ARRAY < $tmplist
+
 while read line
 do
     printf "$hl[%03s%s]$rs\t${line}\n" $i
@@ -111,9 +111,8 @@ else
     echo
 
 fi
-sel_line=${ARRAY[$(( $selection - 1 ))]}
-
-#echo "$selection = $sel_line"; sleep 3; # debug
+sel_line=$( cat $tmplist | sed -n ${selection}p )
+# echo $sel_line; sleep 3
 
 if [ -z "$sel_line" ]
 then
