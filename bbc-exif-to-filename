@@ -10,7 +10,7 @@
 [ -v $( command -v exif ) ] && { echo "'exif' not installed!"; exit 1; }
 [ -z "$1" ] && { echo "No input folder"; exit 1; } || ifolder="$1"
 [ "$2" == "0" ] && sim=0 || sim=1
-ifolder=$( readlink -f "$1" )
+ifolder=$( realpath "$1" )
 
 echo ""
 echo "-- input dir   = $ifolder"

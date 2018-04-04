@@ -6,6 +6,9 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # ==============================================================================
 
+# Determine distribution
+DIST=$( uname | tr "[:upper:]" "[:lower:]" )
+
 # If not running interactively, don't do anything
 if [[ "$-" != *i* ]]; then return; fi
 
@@ -133,10 +136,7 @@ fi
 
 alias less="less -r" # raw control characters
 alias whence="type -a" # where, of a sort
-alias grep="grep --color" # colored grep
-alias egrep="egrep --color=auto" # colored grep
-alias fgrep="fgrep --color=auto" # colored grep
-alias ls="ls -hF --color=tty" # classify files in colour
+[ $DIST == "darwin" ] && alias ls="ls -hFG" || alias ls="ls -hF --color=tty"
 alias ll="ls -l" # long list
 alias l="ll"
 alias ..="cd .."

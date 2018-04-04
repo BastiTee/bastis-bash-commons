@@ -38,7 +38,7 @@ while getopts "hp:ao:r" opt; do
         p) PLAYLIST=$OPTARG;;
         a) ASK_AUTH=1;;
         r) DO_RENAME=1;;
-        o) DL_FOLDER=$( readlink -f $OPTARG );;
+        o) DL_FOLDER=$( realpath $OPTARG );;
         h) show_help "";;
         *) show_help "Illegal argument.";;
     esac

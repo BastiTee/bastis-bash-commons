@@ -4,7 +4,7 @@ tf=$( mktemp )
 
 [ -z "$1" ] && { echo "no dir given."; exit 1; }
 [ ! -d "$1" ] && { echo "given path is no dir."; exit 1; }
-idir="$( readlink -f "$1")"
+idir="$( realpath "$1")"
 cd "$idir"
 
 

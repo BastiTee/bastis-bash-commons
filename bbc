@@ -175,7 +175,7 @@ $@ || return $?
 		echo "File/folder not readable."
 		return 1;
 	}
-	src="$( readlink -f $1 )"
+	src="$( realpath $1 )"
 	trg="$( basename $1 ).zip"
 	echo -e "packing from\n\t$src to\n\t$trg"
 	rmdir=$( bbc-yesno "Remove source folder $src after packing?" )
@@ -274,7 +274,7 @@ any arguments, the current list will be printed. When you stored 10 items, \
 you'll need to manually delete bookmarks from ~/.bbcbookmarksrc." \
 $@ || return $?
 
-	BMF=$( readlink -f ~/.bbc-bookmarks-rc )
+	BMF=$( realpath ~/.bbc-bookmarks-rc )
 
 	if [ $# == 0 ]; then
 		if [ -e $BMF ]; then
@@ -288,7 +288,7 @@ $@ || return $?
 
 	if [ $1 == "b" ]; then
 		[ ! -e $BMF ] && { printf '' > $BMF; }
-		currdir=$( readlink -f $( pwd ))
+		currdir=$( realpath $( pwd ))
 		if [ ! -z "$( cat $BMF | sed -e "s/\/\\\\//g" | grep -e "^$currdir$" )" ]
 		then
 			echo "Directory already bookmarked.";
@@ -357,10 +357,10 @@ a 'BBC_ARCHIVE_FOLDER' pointing to your desired archive folder.[1] Source \
 folder to be packed." $@ || return $?
 
     [ -z "$1" ] && { echo "No folder provided."; return 1; }
-    fulldir=$( readlink -f "$1" )
+    fulldir=$( realpath "$1" )
     [ ! -d "$fulldir" ] && { echo "Given path is not a directory"; return 1; }
 
-    target_folder=$( readlink -fm . )
+    target_folder=$( realpath . )
     datetime=$( bbc-get-datetime )
     basename=$( basename $fulldir )
     trgfile=${datetime}_${basename}.zip
@@ -556,7 +556,7 @@ function bbc-whereami () {
 [1] If '-d' then return parent dirname only."\
 	$@ || return $?
 
-	location=$( readlink -f $( dirname $0 ))
+	location=$( realpath $( dirname $0 ))
 	if [ "$1" == "-d" ]; then
 		echo ${location}
 	else
