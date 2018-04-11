@@ -15,7 +15,8 @@ Usage: $( basename $0) [-i <CMD_FILE>] [-c <CMD_LIST>] [-t <HEADER_FILE>] [-s]
     -c <CMD_LIST>     Input command generating list entries.
     -t <HEADER_FILE>  An optional file holding a header to be printed.
     -p <PREFIX>       Optional command prefix (eg. 'java -jar')
-    -s                Don't clear screen
+    -s <SUFFIX>       Optional command suffix (eg. '-Xmx1024m')
+    -d                Don't clear screen
 
 Note that either -i or -c must be set.
 
@@ -40,13 +41,14 @@ if [ ! -z $( command -v tput ) ]; then
 fi
 
 # parse cmd line
-while getopts "hi:t:c:p:s" opt; do
+while getopts "hi:t:c:p:s:d" opt; do
     case "$opt" in
     i) INFILE="$OPTARG";;
     t) HFILE="$OPTARG";;
     c) CMDLIST="$OPTARG";;
     p) PREFIX="$OPTARG";;
-    s) DONTCLEAR=1 ;;
+    s) SUFFIX="$OPTARG";;
+    d) DONTCLEAR=1 ;;
     h) show_help;;
     *) echo "Illegal argument."; show_help;;
 	esac
@@ -119,7 +121,7 @@ then
     echo "Invalid selection"
     exit 1
 fi
-jump="$PREFIX $( echo "$sel_line" | sed -e "s/&/\\\\&/g" )" # escape &
+jump="$PREFIX $( echo "$sel_line" | sed -e "s/&/\\\\&/g" ) $SUFFIX" # escape &
 
 [ ! $DONTCLEAR ] && printf "\033c"
 
