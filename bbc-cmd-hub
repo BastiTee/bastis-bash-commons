@@ -37,6 +37,7 @@ hl=
 rs=
 if [ ! -z $( command -v tput ) ]; then
     hl=$( tput setaf 7; tput setab 4; )
+    hr=$( tput setaf 4; )
     rs=$( tput sgr0 )
 fi
 
@@ -95,11 +96,13 @@ NR!=FNR{
 
 i=1
 
+[ ! -z "$PREFIX" ] && echo -e "${hr}${PREFIX} …${rs}"
 while read line
 do
     printf "$hl[%03s%s]$rs\t${line}\n" $i
     i=$(($i + 1))
 done < "$strippedlist"
+[ ! -z "$SUFFIX" ] && echo -e "${hr}… ${SUFFIX}${rs}"
 
 # if there is a preselection, just run it ..
 if [ ! -z $PRESELECTION ]
