@@ -390,6 +390,20 @@ folder to be packed." $@ || return $?
 # GIT UTILITIES
 # ==============================================================================
 
+function bbc-git-backup-changes() {
+	init-help-output "$FUNCNAME" "Copy all (un-) staged changes to a dir.\
+	[1] Target directory." $@ || return $?
+
+	[ -z "$1" ] && { echo "No target folder given."; return 1; }
+	[ ! -d "$1" ] && { echo "Target folder does not exist."; return 1; }
+
+	git status -s | grep -v -E "^[ ]?D" | awk '{ print $2}' |\
+	while read file; do
+	  rsync -R $file $1
+	done
+	find $1 -type f
+}
+
 function bbc-git-clone-gist () {
 	init-help-output "$FUNCNAME" "Clone a single gist by its ID.\
 	[1] Gist ID." $@ || return $?
