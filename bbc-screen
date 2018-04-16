@@ -28,8 +28,24 @@ EOF
 #    killall -v screen
 }
 
-if [ "$1" == "dev" ]; then
-    # DEFAULT DEVELOPMENT SETUP ----------------------------------------------
+if [ "$1" == "dev2" ]; then
+    # TWO PANE DEVELOPMENT SETUP ----------------------------------------------
+    shift
+    tempf=$( mktemp )
+    cat << EOF > $tempf
+split -h
+screen -t ED
+screen -t ED
+select 0
+focus
+screen -t HTOP
+stuff "htop ^M"
+resize -v 25%
+focus
+EOF
+    start_screen_with_config $tempf "dev-2-console"
+elif [ "$1" == "dev3" ]; then
+    # THREE PANE DEVELOPMENT SETUP---------------------------------------------
     shift
     tempf=$( mktemp )
     cat << EOF > $tempf
@@ -48,7 +64,7 @@ stuff "htop ^M"
 focus
 select 0
 EOF
-    start_screen_with_config $tempf "dev-console"
+    start_screen_with_config $tempf "dev-3-console"
 else
     # FALLBACK: START MINT SCREEN ---------------------------------------------
     screen $@
