@@ -44,7 +44,7 @@ resize -h 35%
 split -h
 focus
 screen -t IX
-stuff "watch -ctn2 ix monitor ^M"
+stuff "watch -ctn10 ix monitor ^M"
 resize -v 60%
 focus
 EOF
