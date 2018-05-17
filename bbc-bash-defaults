@@ -155,6 +155,7 @@ alias http="python3 -m http.server 1337"
 alias duh="sudo du -sh * 2> /dev/null | sort -rh"
 alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class \
 --exclude=*.jar --exclude-dir=bin"
+alias mc='LANG=en_EN.UTF-8 mc'
 
 # Find out location of sourced default file ..
 if [ ! -z ${SCRIPTDIR} ]; then

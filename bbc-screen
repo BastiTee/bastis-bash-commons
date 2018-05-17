@@ -28,29 +28,29 @@ EOF
 #    killall -v screen
 }
 
-if [ "$1" == "dev2" ]; then
-    # TWO PANE DEVELOPMENT SETUP ----------------------------------------------
+if [ "$1" == "devw" ]; then
+    # WORK ETUP ----------------------------------------------
     shift
     tempf=$( mktemp )
     cat << EOF > $tempf
-split -v
+split -h
 screen -t ED
 screen -t ED
 select 0
 focus
 screen -t HTOP
 stuff "htop ^M"
-resize -h 35%
-split -h
+resize -v 25%
+split -v
 focus
 screen -t IX
-stuff "watch -ctn10 ix monitor ^M"
-resize -v 60%
+stuff "mc ^M"
+resize -h 60%
 focus
 EOF
     start_screen_with_config $tempf "dev-console"
-elif [ "$1" == "dev3" ]; then
-    # THREE PANE DEVELOPMENT SETUP---------------------------------------------
+elif [ "$1" == "devh" ]; then
+    # HOME SETUP---------------------------------------------
     shift
     tempf=$( mktemp )
     cat << EOF > $tempf
