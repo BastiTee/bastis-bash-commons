@@ -156,6 +156,7 @@ alias duh="sudo du -sh * 2> /dev/null | sort -rh"
 alias cgrep="grep -ilr --exclude-dir=.git --exclude=*.class \
 --exclude=*.jar --exclude-dir=bin"
 alias mc='export MC_SKIN=~/.config/mc/ini.theme && LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 mc'
+alias edit-bashrc="vi ~/.bashrc && source ~/.bashrc"
 
 # Find out location of sourced default file ..
 if [ ! -z ${SCRIPTDIR} ]; then
