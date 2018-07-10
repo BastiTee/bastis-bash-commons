@@ -274,7 +274,8 @@ any arguments, the current list will be printed. When you stored 10 items, \
 you'll need to manually delete bookmarks from ~/.bbcbookmarksrc." \
 $@ || return $?
 
-	BMF=$( realpath ~/.bbc-bookmarks-rc )
+	BMF=~/.bbc-bookmarks-rc
+	[ ! -f $BMF ] && touch $BMF
 
 	if [ $# == 0 ]; then
 		if [ -e $BMF ]; then
@@ -288,7 +289,7 @@ $@ || return $?
 
 	if [ $1 == "b" ]; then
 		[ ! -e $BMF ] && { printf '' > $BMF; }
-		currdir=$( realpath $( pwd ))
+		currdir=$( pwd )
 		if [ ! -z "$( cat $BMF | sed -e "s/\/\\\\//g" | grep -e "^$currdir$" )" ]
 		then
 			echo "Directory already bookmarked.";
