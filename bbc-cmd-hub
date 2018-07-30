@@ -16,6 +16,7 @@ Usage: $( basename $0) [-i <CMD_FILE>] [-c <CMD_LIST>] [-t <HEADER_FILE>] [-s]
     -t <HEADER_FILE>  An optional file holding a header to be printed.
     -p <PREFIX>       Optional command prefix (eg. 'java -jar')
     -s <SUFFIX>       Optional command suffix (eg. '-Xmx1024m')
+    -n                No whitespaces before/after suffix/prefix
     -d                Don't clear screen
 
 Note that either -i or -c must be set.
@@ -42,7 +43,7 @@ if [ ! -z $( command -v tput ) ]; then
 fi
 
 # parse cmd line
-while getopts "hi:t:c:p:s:d" opt; do
+while getopts "hi:t:c:p:s:dn" opt; do
     case "$opt" in
     i) INFILE="$OPTARG";;
     t) HFILE="$OPTARG";;
@@ -50,6 +51,7 @@ while getopts "hi:t:c:p:s:d" opt; do
     p) PREFIX="$OPTARG";;
     s) SUFFIX="$OPTARG";;
     d) DONTCLEAR=1 ;;
+    n) NOWS=1 ;;
     h) show_help;;
     *) echo "Illegal argument."; show_help;;
 	esac
@@ -125,6 +127,9 @@ then
     exit 1
 fi
 jump="$PREFIX $( echo "$sel_line" | sed -e "s/&/\\\\&/g" ) $SUFFIX" # escape &
+if [ ! -z "$NOWS" ]; then  # No whitespaces between prefix, payload and suffix
+    jump="$PREFIX$( echo "$sel_line" | sed -e "s/&/\\\\&/g" )$SUFFIX"
+fi
 
 [ ! $DONTCLEAR ] && printf "\033c"
 
