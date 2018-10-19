@@ -8,6 +8,7 @@ const express = require('express');
 const server = express();
 const bs = require('browser-sync').create();
 const internalPort = 61426;
+const externalPort = 8000;
 
 const setNoCache = function(request, response, next) {
     response.header('Cache-Control',
@@ -29,10 +30,10 @@ bs.watch(watchFolder + '/**/*.html').on('change', bs.reload);
 bs.watch(watchFolder + '/**/*.css').on('change', bs.reload);
 bs.init({
     proxy: 'http://localhost:' + internalPort,
-    port: 1337,
+    port: externalPort,
     ui: false,
     notify: false,
     logLevel: 'info',
 });
 
-console.log('>> http://localhost:1337');
+console.log('>> http://localhost:' + externalPort);
