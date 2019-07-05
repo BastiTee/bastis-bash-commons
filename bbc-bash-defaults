@@ -183,7 +183,3 @@ if [ ! -z ${SCRIPTDIR} ]; then
     alias b="bbc-bb"
     for i in $( seq 1 9 ); do alias b$i="b $i"; done
 fi
-
-# FINALIZATION
-# ===========================================================
-echo ">> [bbc] loaded."
